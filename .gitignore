@@ -1,7 +1,2 @@
-/target
-**/*.rs.bk
-.#*
-#*
-/data
-/logs
-.idea
+node_modules
+dist
