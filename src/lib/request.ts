@@ -1,15 +1,6 @@
 import axios, {Axios} from 'axios';
 import {Config} from './config.js';
 
-// export async function getUUID(username: string): Promise<UUIDResult> {
-//   const response = await instance.get(`/account/users/profiles/minecraft/${username}`);
-
-//   return {
-//     success: (response.status === 200) as true,
-//     result: response.data
-//   };
-// }
-
 export class Request {
 	private inner: Axios;
 
@@ -17,7 +8,7 @@ export class Request {
 		this.inner = axios.create({
 			baseURL: `https://${config.inner.yggdrasil_host}`,
 			validateStatus: () => true,
-			timeout: 2000,
+			timeout: 10_000,
 			timeoutErrorMessage: 'Request timed out',
 		});
 	}

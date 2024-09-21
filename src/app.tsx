@@ -5,27 +5,7 @@ import LoginScreen from './screens/login.js';
 import HomeScreen from './screens/home.js';
 import AuthenticateScreen from './screens/authenticate.js';
 import AccountScreen from './screens/account.js';
-
-// type Item<V> = {
-// 	key?: string;
-// 	label: string;
-// 	value: V;
-// };
-
-// const MENU: Item<string>[] = [
-// 	{
-// 		label: 'Start',
-// 		value: 'start'
-// 	},
-// 	{
-// 		label: 'Account',
-// 		value: 'account'
-// 	},
-// 	{
-// 		label: 'Exit',
-// 		value: 'exit'
-// 	}
-// ];
+import StartScreen from './screens/start.js';
 
 function getScreenJSX(screen: Screens, libs: Libs) {
 	switch (screen) {
@@ -37,6 +17,8 @@ function getScreenJSX(screen: Screens, libs: Libs) {
 			return <AuthenticateScreen libs={libs} />;
 		case 'account':
 			return <AccountScreen libs={libs} />;
+		case 'start':
+			return <StartScreen libs={libs} />;
 	}
 }
 

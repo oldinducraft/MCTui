@@ -40,6 +40,9 @@ export default function HomeScreen(props: {libs: Libs}) {
 			case 'account':
 				props.libs.setScreen('account');
 				break;
+			case 'start':
+				props.libs.setScreen('start');
+				break;
 		}
 	};
 
