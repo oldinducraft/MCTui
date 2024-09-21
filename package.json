@@ -8,7 +8,9 @@
 		"node": ">=16"
 	},
 	"scripts": {
-		"run": "tsc && node dist/cli.js"
+		"run": "tsc && node dist/cli.js",
+		"lint": "eslint \"**/*.ts\" --fix",
+		"format": "prettier --write \"**/*.(ts|tsx)\""
 	},
 	"files": [
 		"dist"
@@ -21,21 +23,22 @@
 		"ink-select-input": "^6.0.0",
 		"ink-spinner": "^5.0.0",
 		"ink-text-input": "^6.0.0",
-		"react": "^18.2.0",
+		"react": "^18.3.1",
 		"zod": "^3.23.8"
 	},
 	"devDependencies": {
-		"@sindresorhus/tsconfig": "^3.0.1",
-		"@types/react": "^18.0.32",
+		"@sindresorhus/tsconfig": "^6.0.0",
+		"@types/react": "^18.3.8",
+		"@typescript-eslint/eslint-plugin": "^8.6.0",
 		"@vdemedes/prettier-config": "^2.0.1",
-		"eslint-config-xo-react": "^0.27.0",
-		"eslint-plugin-react": "^7.32.2",
-		"eslint-plugin-react-hooks": "^4.6.0",
-		"ink-testing-library": "^3.0.0",
-		"prettier": "^2.8.7",
-		"react-devtools-core": "^4.28.5",
-		"ts-node": "^10.9.1",
-		"typescript": "^5.0.3"
+		"eslint": "^9.11.0",
+		"eslint-config-prettier": "^9.1.0",
+		"eslint-plugin-prettier": "^5.2.1",
+		"eslint-plugin-react": "^7.36.1",
+		"ink-testing-library": "^4.0.0",
+		"prettier": "^3.3.3",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.6.2"
 	},
 	"prettier": "@vdemedes/prettier-config"
 }
