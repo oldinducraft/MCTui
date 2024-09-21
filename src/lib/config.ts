@@ -10,6 +10,7 @@ const CONFIG_SCHEMA = z.object({
 	password: z.string().optional(),
 	memory_min: z.string().default('4G'),
 	memory_max: z.string().default('6G'),
+	authlib: z.string().url(),
 });
 
 export class Config {

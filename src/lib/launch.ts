@@ -1,9 +1,13 @@
 import {Client, ILauncherOptions} from 'minecraft-launcher-core';
 import {InMemory} from './in_memory.js';
 import {Config} from './config.js';
+import path from 'path';
+import axios from 'axios';
+import syncFs, {promises as fs} from 'fs';
 
 export class Launch {
 	inner: Client;
+	private authlibInjector = path.join(process.cwd(), 'authlib.jar');
 
 	constructor(
 		private inMemory: InMemory,
@@ -31,7 +35,7 @@ export class Launch {
 				min: this.config.inner.memory_min,
 			},
 			customArgs: [
-				`-javaagent:/home/thets/Dev/launcher/authlib.jar=${this.config.inner.yggdrasil_host}`,
+				`-javaagent:${this.authlibInjector}=${this.config.inner.yggdrasil_host}`,
 				'-Dauthlibinjector.noShowServerName',
 			],
 			quickPlay: {
@@ -42,6 +46,19 @@ export class Launch {
 	}
 
 	public async launch() {
+		await this.downloadAuthlibInjector();
 		await this.inner.launch(this.opts);
+	}
+
+	public async downloadAuthlibInjector() {
+		if (syncFs.existsSync(this.authlibInjector)) {
+			return;
+		}
+
+		const response = await axios.get(this.config.inner.authlib, {
+			responseType: 'arraybuffer',
+		});
+		const fileData = Buffer.from(response.data, 'binary');
+		await fs.writeFile(this.authlibInjector, fileData);
 	}
 }
