@@ -1,11 +1,11 @@
 import React, {useState} from 'react';
 import {Box} from 'ink';
-import {IncompleteLibs, Libs, Screens} from './lib/index.js';
-import LoginScreen from './screens/login.js';
-import HomeScreen from './screens/home.js';
-import AuthenticateScreen from './screens/authenticate.js';
-import AccountScreen from './screens/account.js';
-import StartScreen from './screens/start.js';
+import {IncompleteLibs, Libs, Screens} from '@lib/index.js';
+import LoginScreen from '@screens/login.js';
+import HomeScreen from '@screens/home.js';
+import AuthenticateScreen from '@screens/authenticate.js';
+import AccountScreen from '@screens/account.js';
+import StartScreen from '@screens/start.js';
 
 function getScreenJSX(screen: Screens, libs: Libs) {
 	switch (screen) {

@@ -1,9 +1,9 @@
 import {Box, Text, useInput} from 'ink';
 import React from 'react';
-import KeyHint, {KeyHintDef} from '../components/key_hint.js';
+import KeyHint, {KeyHintDef} from '@components/key_hint.js';
 import TextInput from 'ink-text-input';
 import Spinner from 'ink-spinner';
-import {Libs} from '../lib/index.js';
+import {Libs} from '@lib/index.js';
 
 const KEY_DEFS: KeyHintDef[] = [
 	{key: '<Enter>', action: 'Submit'},
@@ -32,7 +32,7 @@ export default function LoginScreen(props: {libs: Libs}) {
 
 			const res = await props.libs.request
 				.authenticate(username, password)
-				.catch(err => {
+				.catch((err: Error) => {
 					setErrored(err.message);
 				});
 			setLoading(false);

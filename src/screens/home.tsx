@@ -1,7 +1,7 @@
 import {Box} from 'ink';
 import React from 'react';
-import KeyHint, {KeyHintDef} from '../components/key_hint.js';
-import {Libs} from '../lib/index.js';
+import KeyHint, {KeyHintDef} from '@components/key_hint.js';
+import {Libs} from '@lib/index.js';
 import SelectInput from 'ink-select-input';
 import BigText from 'ink-big-text';
 

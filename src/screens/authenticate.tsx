@@ -1,7 +1,7 @@
 import {Box, Text} from 'ink';
 import React, {useEffect} from 'react';
-import KeyHint, {KeyHintDef} from '../components/key_hint.js';
-import {Libs} from '../lib/index.js';
+import KeyHint, {KeyHintDef} from '@components/key_hint.js';
+import {Libs} from '@lib/index.js';
 import BigText from 'ink-big-text';
 import Spinner from 'ink-spinner';
 

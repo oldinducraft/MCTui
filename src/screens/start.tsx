@@ -1,8 +1,8 @@
 import {Box, Text, useInput} from 'ink';
 import React, {useEffect, useState} from 'react';
-import KeyHint, {KeyHintDef} from '../components/key_hint.js';
-import {Libs} from '../lib/index.js';
-import ProgressBar from '../components/progress.js';
+import KeyHint, {KeyHintDef} from '@components/key_hint.js';
+import {Libs} from '@lib/index.js';
+import ProgressBar from '@components/progress.js';
 import BigText from 'ink-big-text';
 
 const KEY_DEFS: KeyHintDef[] = [{key: '<Esc>', action: 'Exit'}];

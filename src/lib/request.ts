@@ -1,5 +1,5 @@
 import axios, {Axios} from 'axios';
-import {Config} from './config.js';
+import {Config} from '@lib/config.js';
 
 export class Request {
 	private inner: Axios;

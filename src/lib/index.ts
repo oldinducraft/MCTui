@@ -1,7 +1,7 @@
-import {Config} from './config.js';
-import {InMemory} from './in_memory.js';
-import {Launch} from './launch.js';
-import {Request} from './request.js';
+import {Config} from '@lib/config.js';
+import {InMemory} from '@lib/in_memory.js';
+import {Launch} from '@lib/launch.js';
+import {Request} from '@lib/request.js';
 
 export interface IncompleteLibs {
 	config: Config;

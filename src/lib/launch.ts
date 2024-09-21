@@ -1,6 +1,6 @@
 import {Client, ILauncherOptions} from 'minecraft-launcher-core';
-import {InMemory} from './in_memory.js';
-import {Config} from './config.js';
+import {InMemory} from '@lib/in_memory.js';
+import {Config} from '@lib/config.js';
 import path from 'path';
 import axios from 'axios';
 import syncFs, {promises as fs} from 'fs';
