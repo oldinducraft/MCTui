@@ -6,6 +6,8 @@ use tui::Tui;
 mod app;
 mod tui;
 mod screens;
+mod utils;
+mod widgets;
 
 #[tokio::main]
 async fn main() -> io::Result<()> {

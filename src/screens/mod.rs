@@ -14,4 +14,6 @@ pub trait ScreenTrait {
         let _ = event;
         Some(())
     }
+
+    fn on_tick(&mut self) {}
 }

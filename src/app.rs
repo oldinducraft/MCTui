@@ -18,6 +18,7 @@ pub struct App {
 
 impl App {
     const FRAMES_PER_SECOND: f32 = 60.0;
+    const TICKS_PER_SECOND: f32 = App::FRAMES_PER_SECOND/10.0;
 
     pub fn new() -> App {
         let mut screens: HashMap<Screen, Box<dyn ScreenTrait>> = HashMap::new();
@@ -31,15 +32,19 @@ impl App {
     }
 
     pub async fn run(&mut self, terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> io::Result<()> {
-        let period = Duration::from_secs_f32(1.0 / Self::FRAMES_PER_SECOND);
-        let mut interval = tokio::time::interval(period);
+        let frame_period = Duration::from_secs_f32(1.0 / Self::FRAMES_PER_SECOND);
+        let tick_period = Duration::from_secs_f32(1.0 / Self::TICKS_PER_SECOND);
+
+        let mut frames_interval = tokio::time::interval(frame_period);
+        let mut ticks_interval = tokio::time::interval(tick_period);
         let mut events = EventStream::new();
 
         while !self.exit {
             let screen = self.screens.get_mut(&self.current_screen).unwrap();
 
             tokio::select! {
-                _ = interval.tick() => { terminal.draw(|frame| screen.render(frame))?; },
+                _ = frames_interval.tick() => { terminal.draw(|frame| screen.render(frame))?; },
+                _ = ticks_interval.tick() => { self.on_tick(); },
                 Some(Ok(event)) = events.next() => { self.handle_event(event); },
             }
         }
@@ -69,5 +74,10 @@ impl App {
         screen.on_key_pressed(event)?;
 
         Some(())
+    }
+
+    fn on_tick(&mut self) {
+        let screen = self.screens.get_mut(&self.current_screen).unwrap();
+        screen.on_tick();
     }
 }
