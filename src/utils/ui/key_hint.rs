@@ -6,7 +6,9 @@ use ratatui::style::Stylize;
 use ratatui::text::Span;
 use ratatui::widgets::block::{Position, Title};
 
-pub fn key_hint_title(keys: &[(&'static str, &'static str)]) -> Title<'static> {
+pub type KeyHint = (&'static str, &'static str);
+
+pub fn key_hint_title(keys: &[KeyHint]) -> Title<'static> {
     #[allow(unstable_name_collisions)]
     let lines = keys
         .iter()

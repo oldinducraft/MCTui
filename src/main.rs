@@ -4,8 +4,8 @@ use app::App;
 use tui::Tui;
 
 mod app;
-mod tui;
 mod screens;
+mod tui;
 mod utils;
 mod widgets;
 

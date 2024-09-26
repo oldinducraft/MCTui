@@ -1,32 +1,37 @@
 use std::collections::HashMap;
 use std::io::{self, Stdout};
+use std::sync::Arc;
 use std::time::Duration;
 
 use crossterm::event::{Event, EventStream, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use futures::StreamExt;
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
+use tokio::time::Instant;
 
-use crate::screens::home::HomeScreen;
+use crate::screens::login::LoginScreen;
 use crate::screens::{Screen, ScreenTrait};
+use crate::utils::immediate_rw_lock::ImmediateRwLock;
 
 pub struct App {
     exit:           bool,
-    current_screen: Screen,
+    current_screen: Arc<ImmediateRwLock<Screen>>,
     screens:        HashMap<Screen, Box<dyn ScreenTrait>>,
 }
 
 impl App {
     const FRAMES_PER_SECOND: f32 = 60.0;
-    const TICKS_PER_SECOND: f32 = App::FRAMES_PER_SECOND/10.0;
+    const TICKS_PER_SECOND: f32 = App::FRAMES_PER_SECOND / 10.0;
 
     pub fn new() -> App {
+        let current_screen = Arc::new(ImmediateRwLock::default());
         let mut screens: HashMap<Screen, Box<dyn ScreenTrait>> = HashMap::new();
-        screens.insert(Screen::Home, Box::new(HomeScreen::new()));
+
+        screens.insert(Screen::Login, Box::new(LoginScreen::new(current_screen.clone())));
 
         Self {
             exit: false,
-            current_screen: Screen::Home,
+            current_screen,
             screens,
         }
     }
@@ -40,11 +45,11 @@ impl App {
         let mut events = EventStream::new();
 
         while !self.exit {
-            let screen = self.screens.get_mut(&self.current_screen).unwrap();
+            let screen = self.screens.get_mut(&self.current_screen.get().unwrap()).unwrap();
 
             tokio::select! {
                 _ = frames_interval.tick() => { terminal.draw(|frame| screen.render(frame))?; },
-                _ = ticks_interval.tick() => { self.on_tick(); },
+                instant = ticks_interval.tick() => { self.on_tick(instant); },
                 Some(Ok(event)) = events.next() => { self.handle_event(event); },
             }
         }
@@ -70,14 +75,14 @@ impl App {
             return None;
         }
 
-        let screen = self.screens.get_mut(&self.current_screen).unwrap();
+        let screen = self.screens.get_mut(&self.current_screen.get().unwrap()).unwrap();
         screen.on_key_pressed(event)?;
 
         Some(())
     }
 
-    fn on_tick(&mut self) {
-        let screen = self.screens.get_mut(&self.current_screen).unwrap();
-        screen.on_tick();
+    fn on_tick(&mut self, instant: Instant) {
+        let screen = self.screens.get_mut(&self.current_screen.get().unwrap()).unwrap();
+        screen.on_tick(instant);
     }
 }
