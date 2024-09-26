@@ -9,14 +9,17 @@ use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 use tokio::time::Instant;
 
+use crate::screens::home::HomeScreen;
 use crate::screens::login::LoginScreen;
 use crate::screens::{Screen, ScreenTrait};
+use crate::utils::config::Config;
 use crate::utils::immediate_rw_lock::ImmediateRwLock;
 
 pub struct App {
     exit:           bool,
-    current_screen: Arc<ImmediateRwLock<Screen>>,
     screens:        HashMap<Screen, Box<dyn ScreenTrait>>,
+    current_screen: Arc<ImmediateRwLock<Screen>>,
+    config: Arc<Config>,
 }
 
 impl App {
@@ -25,14 +28,17 @@ impl App {
 
     pub fn new() -> App {
         let current_screen = Arc::new(ImmediateRwLock::default());
+        let config = Arc::new(Config::new(None));
         let mut screens: HashMap<Screen, Box<dyn ScreenTrait>> = HashMap::new();
 
-        screens.insert(Screen::Login, Box::new(LoginScreen::new(current_screen.clone())));
+        screens.insert(Screen::Login, Box::new(LoginScreen::new(current_screen.clone(), config.clone())));
+        screens.insert(Screen::Home, Box::new(HomeScreen::new(current_screen.clone(), config.clone())));
 
         Self {
             exit: false,
             current_screen,
             screens,
+            config,
         }
     }
 

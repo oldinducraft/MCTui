@@ -10,6 +10,7 @@ use ratatui::Frame;
 use tokio::time::Instant;
 
 use super::{Screen, ScreenTrait};
+use crate::utils::config::Config;
 use crate::utils::immediate_rw_lock::ImmediateRwLock;
 use crate::utils::ui::center::center;
 use crate::widgets::window::Window;
@@ -18,10 +19,10 @@ pub mod form;
 pub mod form_state;
 pub mod login_request_state;
 
-#[derive(Default)]
 pub struct LoginScreen {
     form:           LoginFormState,
     current_screen: Arc<ImmediateRwLock<Screen>>,
+    config:         Arc<Config>,
 }
 
 const KEY_HINTS: [(&str, &str); 3] = [("Esc/Ctrl+C", "Exit"), ("Enter", "Submit"), ("Tab", "Next field")];
@@ -44,6 +45,15 @@ impl ScreenTrait for LoginScreen {
             KeyCode::Tab => self.form.next_field(),
             KeyCode::Enter => {
                 if self.form.login_request_state.get().unwrap() == LoginRequestState::Fulfilled {
+                    let mut lock = self.config.inner.write().unwrap();
+                    lock.username = Some(self.form.auth.username.clone());
+                    lock.password = Some(self.form.auth.password.clone());
+                    drop(lock);
+
+                    self.config.save();
+
+                    self.current_screen.set(Screen::Home).unwrap();
+
                     return None;
                 }
 
@@ -57,10 +67,11 @@ impl ScreenTrait for LoginScreen {
 
     fn on_tick(&mut self, _instant: Instant) { self.form.on_tick(); }
 
-    fn new(current_screen: Arc<ImmediateRwLock<Screen>>) -> LoginScreen {
+    fn new(current_screen: Arc<ImmediateRwLock<Screen>>, config: Arc<Config>) -> LoginScreen {
         LoginScreen {
             form: LoginFormState::default(),
             current_screen,
+            config,
         }
     }
 }

@@ -4,18 +4,21 @@ use crossterm::event::KeyEvent;
 use ratatui::Frame;
 use tokio::time::Instant;
 
+use crate::utils::config::Config;
 use crate::utils::immediate_rw_lock::ImmediateRwLock;
 
 pub mod login;
+pub mod home;
 
 #[derive(Hash, PartialEq, Eq, Clone, Copy, Debug, Default)]
 pub enum Screen {
     #[default]
     Login,
+    Home,
 }
 
 pub trait ScreenTrait {
-    fn new(current_screen: Arc<ImmediateRwLock<Screen>>) -> Self
+    fn new(current_screen: Arc<ImmediateRwLock<Screen>>, config: Arc<Config>) -> Self
     where
         Self: Sized;
 
