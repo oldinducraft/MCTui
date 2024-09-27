@@ -6,16 +6,16 @@ use reqwest::{Client, RequestBuilder};
 use serde::Serialize;
 use types::{AuthenticateRequest, AuthenticateResponse, RequestResult, YggdrasilResponse};
 
+const YGGDRASIL_HOST: &str = "https://wayaway.asuscomm.com";
+
 pub struct Yggdrasil {
-    client:   Client,
-    base_url: String,
+    client: Client,
 }
 
 impl Yggdrasil {
-    pub fn new(base_url: String) -> Self {
+    pub fn new() -> Self {
         Self {
             client: Client::builder().timeout(Duration::from_secs(10)).build().unwrap(),
-            base_url,
         }
     }
 
@@ -27,6 +27,6 @@ impl Yggdrasil {
     }
 
     fn post<T: Serialize>(&self, path: &str, body: T) -> RequestBuilder {
-        self.client.post(format!("{}/{}", self.base_url, path)).json(&body)
+        self.client.post(format!("{}/{}", YGGDRASIL_HOST, path)).json(&body)
     }
 }

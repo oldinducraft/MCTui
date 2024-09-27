@@ -3,8 +3,8 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Block, Paragraph, StatefulWidget};
 use throbber_widgets_tui::{Throbber, WhichUse};
 
-use super::form_state::{Field, LoginFormState};
-use super::login_request_state::LoginRequestState;
+use super::form_state::LoginFormState;
+use super::types::{Field, LoginRequestState};
 
 #[derive(Default)]
 pub struct LoginForm {
@@ -34,17 +34,17 @@ impl StatefulWidget for LoginForm {
             .flex(Flex::Center)
             .split(area);
 
-        Paragraph::new(state.auth.username.as_str())
+        Paragraph::new(state.username.as_str())
             .block(Block::bordered().title("Username"))
             .style(state.get_style_for(Field::Username))
             .render(chunks[0], buf);
 
-        Paragraph::new("*".repeat(state.auth.password.len()))
+        Paragraph::new("*".repeat(state.password.len()))
             .block(Block::bordered().title("Password"))
             .style(state.get_style_for(Field::Password))
             .render(chunks[1], buf);
 
-        match state.login_request_state.get().unwrap() {
+        match state.request_state.get().unwrap() {
             LoginRequestState::Pending => {
                 StatefulWidget::render(self.get_throbber(), chunks[3], buf, &mut state.throbber_state)
             },
@@ -57,9 +57,8 @@ impl StatefulWidget for LoginForm {
                 .style(Style::default().fg(Color::Green))
                 .render(chunks[3], buf);
             },
-            LoginRequestState::Rejected => {
-                let error_message = state.login_request_error.get().unwrap();
-                Paragraph::new(error_message)
+            LoginRequestState::Rejected(err) => {
+                Paragraph::new(err)
                     .style(Style::default().fg(Color::Red))
                     .render(chunks[3], buf);
             },

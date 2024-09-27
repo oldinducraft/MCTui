@@ -3,27 +3,16 @@ use std::sync::Arc;
 use ratatui::style::{Color, Style};
 use throbber_widgets_tui::ThrobberState;
 
-use super::login_request_state::LoginRequestState;
+use super::types::{Field, LoginRequestState};
 use crate::utils::immediate_rw_lock::ImmediateRwLock;
-use crate::utils::yggdrasil::types::{AuthenticateRequest, YggdrasilResponse};
-use crate::utils::yggdrasil::Yggdrasil;
 
-#[derive(Default, PartialEq)]
-pub enum Field {
-    #[default]
-    Username,
-    Password,
-}
-
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct LoginFormState {
-    pub(super) auth:                AuthenticateRequest,
-    pub(super) active_field:        Field,
-    pub(super) throbber_state:      ThrobberState,
-    pub(super) login_request_state: Arc<ImmediateRwLock<LoginRequestState>>,
-    pub(super) login_request_error: Arc<ImmediateRwLock<String>>,
-    pub(super) access_token:        Arc<ImmediateRwLock<String>>,
-    pub(super) client_token:        Arc<ImmediateRwLock<String>>,
+    pub(super) username:       String,
+    pub(super) password:       String,
+    pub(super) active_field:   Field,
+    pub(super) throbber_state: ThrobberState,
+    pub(super) request_state:  Arc<ImmediateRwLock<LoginRequestState>>,
 }
 
 impl LoginFormState {
@@ -44,65 +33,21 @@ impl LoginFormState {
 
     pub fn add_char(&mut self, c: char) {
         match self.active_field {
-            Field::Username => self.auth.username.push(c),
-            Field::Password => self.auth.password.push(c),
+            Field::Username => self.username.push(c),
+            Field::Password => self.password.push(c),
         }
     }
 
     pub fn remove_char(&mut self) {
         match self.active_field {
-            Field::Username => self.auth.username.pop(),
-            Field::Password => self.auth.password.pop(),
+            Field::Username => self.username.pop(),
+            Field::Password => self.password.pop(),
         };
     }
 
     pub fn on_tick(&mut self) {
-        if self.login_request_state.get().unwrap() == LoginRequestState::Pending {
+        if matches!(self.request_state.get().unwrap(), LoginRequestState::Pending) {
             self.throbber_state.calc_next();
-        }
-    }
-
-    // TODO: Move out to LoginScreen
-    pub fn submit(&self) {
-        tokio::spawn(Self::login(
-            self.login_request_state.clone(),
-            self.login_request_error.clone(),
-            self.auth.clone(),
-            self.access_token.clone(),
-            self.client_token.clone(),
-        ));
-    }
-
-    async fn login(
-        login_request_state: Arc<ImmediateRwLock<LoginRequestState>>,
-        login_request_error: Arc<ImmediateRwLock<String>>,
-        auth: AuthenticateRequest,
-        access_token: Arc<ImmediateRwLock<String>>,
-        client_token: Arc<ImmediateRwLock<String>>,
-    ) {
-        login_request_state.set(LoginRequestState::Pending).unwrap();
-
-        if auth.username.is_empty() || auth.password.is_empty() {
-            login_request_state.set(LoginRequestState::Rejected).unwrap();
-            login_request_error
-                .set("Have you considered filling in all fields?".to_string())
-                .unwrap();
-            return;
-        }
-
-        let client = Yggdrasil::new("https://wayaway.asuscomm.com".to_string());
-        let res = client.authenticate(auth).await.unwrap();
-
-        match res {
-            YggdrasilResponse::Success(tokens) => {
-                access_token.set(tokens.access_token).unwrap();
-                client_token.set(tokens.client_token).unwrap();
-                login_request_state.set(LoginRequestState::Fulfilled).unwrap();
-            },
-            YggdrasilResponse::Error(err) => {
-                login_request_state.set(LoginRequestState::Rejected).unwrap();
-                login_request_error.set(err.error_message).unwrap();
-            },
         }
     }
 }

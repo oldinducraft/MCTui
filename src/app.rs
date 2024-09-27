@@ -49,7 +49,7 @@ impl App {
         let mut events = EventStream::new();
 
         while !self.exit {
-            let screen = self.libs.screen.get().unwrap();
+            let screen = self.libs.screen.get_current();
             let screen = self.screens.get_mut(&screen).unwrap();
 
             tokio::select! {
@@ -80,7 +80,7 @@ impl App {
             return None;
         }
 
-        let screen = self.libs.screen.get().unwrap();
+        let screen = self.libs.screen.get_current();
         let screen = self.screens.get_mut(&screen).unwrap();
         screen.on_key_pressed(event)?;
 
@@ -88,7 +88,7 @@ impl App {
     }
 
     fn on_tick(&mut self, instant: Instant) {
-        let screen = self.libs.screen.get().unwrap();
+        let screen = self.libs.screen.get_current();
         let screen = self.screens.get_mut(&screen).unwrap();
         screen.on_tick(instant);
     }

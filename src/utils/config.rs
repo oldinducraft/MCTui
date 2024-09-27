@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 const CONFIG_PATH: &str = "config.json";
 
 pub struct Config {
-    pub inner: RwLock<ConfigInner>,
+    inner: RwLock<ConfigInner>,
 }
 
 impl Config {
@@ -15,11 +15,11 @@ impl Config {
         let this = Self {
             inner: RwLock::new(Default::default()),
         };
-        this.load();
+        this.reload();
         this
     }
 
-    pub fn load(&self) {
+    pub fn reload(&self) {
         if !self.config_exists() {
             self.save();
             return;
@@ -37,6 +37,20 @@ impl Config {
     }
 
     fn config_exists(&self) -> bool { Path::new(CONFIG_PATH).exists() }
+
+    pub fn set_username(&self, username: String) {
+        let mut lock = self.inner.write().unwrap();
+        lock.username = Some(username);
+    }
+
+    pub fn set_password(&self, password: String) {
+        let mut lock = self.inner.write().unwrap();
+        lock.password = Some(password);
+    }
+
+    pub fn get_username(&self) -> Option<String> { self.inner.read().unwrap().username.clone() }
+    
+    pub fn get_password(&self) -> Option<String> { self.inner.read().unwrap().password.clone() }
 }
 
 #[derive(Deserialize, Serialize, Default, Clone)]

@@ -3,21 +3,24 @@ use std::sync::Arc;
 use crossterm::event::{KeyCode, KeyEvent};
 use form::LoginForm;
 use form_state::LoginFormState;
-use login_request_state::LoginRequestState;
 use ratatui::layout::Constraint;
 use ratatui::style::Stylize;
 use ratatui::Frame;
 use tokio::time::Instant;
+use types::{LoginRequestState, Submit};
 
 use super::{Screen, ScreenTrait};
 use crate::utils::ui::center::center;
+use crate::utils::yggdrasil::types::{AuthenticateRequest, AuthenticateResponse, YggdrasilResponse};
+use crate::utils::yggdrasil::Yggdrasil;
 use crate::utils::Libs;
 use crate::widgets::window::Window;
 
 pub mod form;
 pub mod form_state;
-pub mod login_request_state;
+pub mod types;
 
+#[derive(Clone)]
 pub struct LoginScreen {
     form: LoginFormState,
     libs: Arc<Libs>,
@@ -41,7 +44,7 @@ impl ScreenTrait for LoginScreen {
             KeyCode::Char(c) => self.form.add_char(c),
             KeyCode::Backspace => self.form.remove_char(),
             KeyCode::Tab => self.form.next_field(),
-            KeyCode::Enter => self.submit_or_continue(),
+            KeyCode::Enter => self.submit_or_continue((&*self).into()),
             _ => return Some(()),
         };
 
@@ -59,27 +62,53 @@ impl ScreenTrait for LoginScreen {
 }
 
 impl LoginScreen {
-    fn save_credentials(&self) {
-        let mut lock = self.libs.config.inner.write().unwrap();
-        lock.username = Some(self.form.auth.username.clone());
-        lock.password = Some(self.form.auth.password.clone());
-        self.libs.config.save();
+    fn save_credentials(libs: Arc<Libs>, username: String, password: String) {
+        libs.config.set_username(username);
+        libs.config.set_password(password);
+        libs.config.save();
     }
 
-    fn save_tokens(&self) {
-        let mut lock = self.libs.in_memory.write().unwrap();
-        lock.set_access_token(self.form.access_token.get().unwrap());
-        lock.set_client_token(self.form.client_token.get().unwrap());
+    fn save_tokens(libs: Arc<Libs>, res: AuthenticateResponse) {
+        libs.in_memory.set_access_token(res.access_token);
+        libs.in_memory.set_client_token(res.client_token);
     }
 
-    fn submit_or_continue(&self) {
-        if self.form.login_request_state.get().unwrap() == LoginRequestState::Fulfilled {
-            self.save_credentials();
-            self.save_tokens();
-            self.libs.screen.set(Screen::Home).unwrap();
+    fn submit_or_continue(&self, s: Submit) {
+        if matches!(self.form.request_state.get().unwrap(), LoginRequestState::Fulfilled) {
+            self.libs.screen.goto(Screen::Home);
             return;
         }
 
-        self.form.submit();
+        tokio::spawn(async move {
+            s.request_state.set(LoginRequestState::Pending).unwrap();
+
+            let res = LoginScreen::login(s.username.clone(), s.password.clone()).await;
+            match res {
+                Ok(res) => {
+                    s.request_state.set(LoginRequestState::Fulfilled).unwrap();
+                    LoginScreen::save_tokens(s.libs.clone(), res);
+                    LoginScreen::save_credentials(s.libs.clone(), s.username, s.password);
+                    s.libs.screen.goto(Screen::Home);
+                },
+                Err(err) => {
+                    s.request_state.set(LoginRequestState::Rejected(err)).unwrap();
+                },
+            }
+        });
+    }
+
+    async fn login(username: String, password: String) -> Result<AuthenticateResponse, String> {
+        if username.is_empty() || password.is_empty() {
+            return Err("Have you considered filling in all fields?".to_string());
+        }
+
+        let client = Yggdrasil::new();
+        let res = client.authenticate(AuthenticateRequest { username, password }).await;
+
+        match res {
+            Ok(YggdrasilResponse::Success(res)) => Ok(res),
+            Ok(YggdrasilResponse::Error(err)) => Err(err.error_message),
+            Err(err) => Err(err.to_string()),
+        }
     }
 }

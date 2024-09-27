@@ -1,6 +1,5 @@
 use std::sync::{LockResult, PoisonError, RwLock, RwLockReadGuard, RwLockWriteGuard, TryLockError};
 
-#[derive(Default)]
 pub struct ImmediateRwLock<T: Clone> {
     inner: RwLock<T>,
 }
@@ -37,8 +36,8 @@ impl<T: Clone> ImmediateRwLock<T> {
     }
 }
 
-impl<T: Clone + Default> ImmediateRwLock<T> {
-    pub fn default() -> Self {
+impl<T: Clone + Default> Default for ImmediateRwLock<T> {
+    fn default() -> Self {
         Self {
             inner: RwLock::new(T::default()),
         }

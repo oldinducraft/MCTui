@@ -1,29 +1,26 @@
-use std::sync::RwLock;
-
 use config::Config;
-use immediate_rw_lock::ImmediateRwLock;
 use in_memory::InMemory;
-
-use crate::screens::Screen;
+use screen_manager::ScreenManager;
 
 pub mod config;
 pub mod immediate_rw_lock;
 pub mod in_memory;
 pub mod ui;
 pub mod yggdrasil;
+pub mod screen_manager;
 
 pub struct Libs {
-    pub screen:    ImmediateRwLock<Screen>,
+    pub screen:    ScreenManager,
     pub config:    Config,
-    pub in_memory: RwLock<InMemory>,
+    pub in_memory: InMemory,
 }
 
 impl Libs {
     pub fn new() -> Self {
         Self {
-            screen:    ImmediateRwLock::default(),
+            screen:    ScreenManager::default(),
             config:    Config::new(),
-            in_memory: RwLock::new(InMemory::default()),
+            in_memory: InMemory::new(),
         }
     }
 }

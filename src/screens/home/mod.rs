@@ -30,7 +30,7 @@ impl ScreenTrait for HomeScreen {
         frame.render_widget(
             Paragraph::new(format!(
                 "Access: {:?}",
-                self.libs.in_memory.read().unwrap().get_access_token()
+                self.libs.in_memory.get_access_token()
             ))
             .block(Block::default().padding(Padding::uniform(1)))
             .wrap(Wrap { trim: false }),
@@ -39,7 +39,7 @@ impl ScreenTrait for HomeScreen {
         frame.render_widget(
             Paragraph::new(format!(
                 "Client: {:?}",
-                self.libs.in_memory.read().unwrap().get_client_token()
+                self.libs.in_memory.get_client_token()
             ))
             .block(Block::default().padding(Padding::uniform(1)))
             .wrap(Wrap { trim: false }),

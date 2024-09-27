@@ -33,8 +33,8 @@ impl ScreenTrait for AuthenticateScreen {
     }
 
     fn new(libs: Arc<Libs>) -> AuthenticateScreen {
-        if libs.config.inner.read().unwrap().username.is_none() {
-            libs.screen.set(Screen::Login).unwrap();
+        if libs.config.get_username().is_none() {
+            libs.screen.goto(Screen::Login);
         }
 
         tokio::spawn(AuthenticateScreen::authenticate(libs));
@@ -48,32 +48,33 @@ impl ScreenTrait for AuthenticateScreen {
 }
 
 impl AuthenticateScreen {
-    async fn authenticate(libs: Arc<Libs>) {
-        let auth = AuthenticateScreen::get_authenticate_request(libs.clone());
+    async fn authenticate(libs: Arc<Libs>) -> Option<()> {
+        let auth = AuthenticateScreen::get_authenticate_request(libs.clone())?;
 
-        let client = Yggdrasil::new("https://wayaway.asuscomm.com".to_string());
+        let client = Yggdrasil::new();
         let Ok(res) = client.authenticate(auth).await else {
-            libs.screen.set(Screen::Login).unwrap();
-            return;
+            libs.screen.goto(Screen::Login);
+            return None;
         };
 
         match res {
             YggdrasilResponse::Success(tokens) => {
-                libs.in_memory.write().unwrap().set_access_token(tokens.access_token);
-                libs.in_memory.write().unwrap().set_client_token(tokens.client_token);
-                libs.screen.set(Screen::Home).unwrap();
+                libs.in_memory.set_access_token(tokens.access_token);
+                libs.in_memory.set_client_token(tokens.client_token);
+                libs.screen.goto(Screen::Home);
             },
             YggdrasilResponse::Error(_) => {
-                libs.screen.set(Screen::Login).unwrap();
+                libs.screen.goto(Screen::Login);
             },
-        }
+        };
+
+        Some(())
     }
 
-    fn get_authenticate_request(libs: Arc<Libs>) -> AuthenticateRequest {
-        let lock = libs.config.inner.read().unwrap();
-        let username = lock.username.clone().unwrap();
-        let password = lock.password.clone().unwrap();
+    fn get_authenticate_request(libs: Arc<Libs>) -> Option<AuthenticateRequest> {
+        let username = libs.config.get_username()?;
+        let password = libs.config.get_password()?;
 
-        AuthenticateRequest { username, password }
+        Some(AuthenticateRequest { username, password })
     }
 }
