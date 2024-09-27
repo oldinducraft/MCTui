@@ -1,18 +1,12 @@
-use std::sync::Arc;
-
 use ratatui::style::{Color, Style};
-use throbber_widgets_tui::ThrobberState;
 
-use super::types::{Field, LoginRequestState};
-use crate::utils::immediate_rw_lock::ImmediateRwLock;
+use super::types::Field;
 
 #[derive(Default, Clone)]
 pub struct LoginFormState {
-    pub(super) username:       String,
-    pub(super) password:       String,
-    pub(super) active_field:   Field,
-    pub(super) throbber_state: ThrobberState,
-    pub(super) request_state:  Arc<ImmediateRwLock<LoginRequestState>>,
+    pub(super) username:     String,
+    pub(super) password:     String,
+    pub(super) active_field: Field,
 }
 
 impl LoginFormState {
@@ -43,11 +37,5 @@ impl LoginFormState {
             Field::Username => self.username.pop(),
             Field::Password => self.password.pop(),
         };
-    }
-
-    pub fn on_tick(&mut self) {
-        if matches!(self.request_state.get().unwrap(), LoginRequestState::Pending) {
-            self.throbber_state.calc_next();
-        }
     }
 }

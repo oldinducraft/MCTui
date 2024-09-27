@@ -31,7 +31,7 @@ impl From<&LoginScreen> for Submit {
     fn from(login: &LoginScreen) -> Self {
         Self {
             libs:          login.libs.clone(),
-            request_state: login.form.request_state.clone(),
+            request_state: login.request_loader.state.clone(),
             username:      login.form.username.clone(),
             password:      login.form.password.clone(),
         }

@@ -3,10 +3,10 @@ use std::sync::Arc;
 use crossterm::event::{KeyCode, KeyEvent};
 use form::LoginForm;
 use form_state::LoginFormState;
-use ratatui::layout::Constraint;
+use ratatui::layout::{Constraint, Direction, Flex, Layout};
 use ratatui::style::Stylize;
 use ratatui::Frame;
-use tokio::time::Instant;
+use request_loader::{RequestLoader, RequestLoaderState};
 use types::{LoginRequestState, Submit};
 
 use super::{Screen, ScreenTrait};
@@ -18,12 +18,13 @@ use crate::widgets::window::Window;
 
 pub mod form;
 pub mod form_state;
+pub mod request_loader;
 pub mod types;
 
-#[derive(Clone)]
 pub struct LoginScreen {
-    form: LoginFormState,
-    libs: Arc<Libs>,
+    form:           LoginFormState,
+    request_loader: RequestLoaderState,
+    libs:           Arc<Libs>,
 }
 
 const KEY_HINTS: [(&str, &str); 3] = [("Esc/Ctrl+C", "Exit"), ("Enter", "Submit"), ("Tab", "Next field")];
@@ -35,8 +36,17 @@ impl ScreenTrait for LoginScreen {
         let width_constraint = Constraint::Length((frame.area().width / 2).max(window.max_width() as u16));
         let area = center(frame.area(), width_constraint, Constraint::Percentage(50));
 
+        let layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Fill(2), Constraint::Length(1), Constraint::Fill(1)].as_ref())
+            .margin(2)
+            .spacing(2)
+            .flex(Flex::Center)
+            .split(area);
+
         frame.render_widget(window, area);
-        frame.render_stateful_widget(LoginForm::default().margin(2), area, &mut self.form);
+        frame.render_stateful_widget(LoginForm, layout[0], &mut self.form);
+        frame.render_stateful_widget(RequestLoader, layout[1], &mut self.request_loader);
     }
 
     fn on_key_pressed(&mut self, event: KeyEvent) -> Option<()> {
@@ -51,11 +61,12 @@ impl ScreenTrait for LoginScreen {
         None
     }
 
-    fn on_tick(&mut self, _instant: Instant) { self.form.on_tick(); }
+    fn on_tick(&mut self) { self.request_loader.on_tick(); }
 
     fn new(libs: Arc<Libs>) -> LoginScreen {
         LoginScreen {
             form: LoginFormState::default(),
+            request_loader: RequestLoaderState::default(),
             libs,
         }
     }
@@ -74,7 +85,7 @@ impl LoginScreen {
     }
 
     fn submit_or_continue(&self, s: Submit) {
-        if matches!(self.form.request_state.get().unwrap(), LoginRequestState::Fulfilled) {
+        if matches!(self.request_loader.state.get().unwrap(), LoginRequestState::Fulfilled) {
             self.libs.screen.goto(Screen::Home);
             return;
         }

@@ -44,7 +44,7 @@ impl ScreenTrait for AuthenticateScreen {
         }
     }
 
-    fn on_tick(&mut self, _instant: tokio::time::Instant) { self.loader_state.on_tick(); }
+    fn on_tick(&mut self) { self.loader_state.on_tick(); }
 }
 
 impl AuthenticateScreen {

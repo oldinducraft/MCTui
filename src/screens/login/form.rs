@@ -1,22 +1,12 @@
 use layout::Flex;
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Paragraph, StatefulWidget};
-use throbber_widgets_tui::{Throbber, WhichUse};
 
 use super::form_state::LoginFormState;
-use super::types::{Field, LoginRequestState};
+use super::types::Field;
 
 #[derive(Default)]
-pub struct LoginForm {
-    margin: u16,
-}
-
-impl LoginForm {
-    pub fn margin(mut self, margin: u16) -> Self {
-        self.margin = margin;
-        self
-    }
-}
+pub struct LoginForm;
 
 impl StatefulWidget for LoginForm {
     type State = LoginFormState;
@@ -24,13 +14,7 @@ impl StatefulWidget for LoginForm {
     fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([
-                Constraint::Length(3),
-                Constraint::Length(3),
-                Constraint::Length(1),
-                Constraint::Length(1),
-            ])
-            .margin(self.margin)
+            .constraints([Constraint::Length(3), Constraint::Length(3)])
             .flex(Flex::Center)
             .split(area);
 
@@ -43,37 +27,5 @@ impl StatefulWidget for LoginForm {
             .block(Block::bordered().title("Password"))
             .style(state.get_style_for(Field::Password))
             .render(chunks[1], buf);
-
-        match state.request_state.get().unwrap() {
-            LoginRequestState::Pending => {
-                StatefulWidget::render(self.get_throbber(), chunks[3], buf, &mut state.throbber_state)
-            },
-            LoginRequestState::Fulfilled => {
-                Paragraph::new(Line::from(vec![
-                    "Login successful. Press ".into(),
-                    "<Enter>".cyan(),
-                    " again to continue".into(),
-                ]))
-                .style(Style::default().fg(Color::Green))
-                .render(chunks[3], buf);
-            },
-            LoginRequestState::Rejected(err) => {
-                Paragraph::new(err)
-                    .style(Style::default().fg(Color::Red))
-                    .render(chunks[3], buf);
-            },
-            LoginRequestState::Idle => {},
-        }
-    }
-}
-
-impl LoginForm {
-    fn get_throbber(&self) -> Throbber<'_> {
-        Throbber::default()
-            .label("Running...")
-            .style(Style::default().add_modifier(Modifier::BOLD))
-            .throbber_style(Style::default().fg(Color::LightYellow).add_modifier(Modifier::BOLD))
-            .throbber_set(throbber_widgets_tui::BOX_DRAWING)
-            .use_type(WhichUse::Spin)
     }
 }

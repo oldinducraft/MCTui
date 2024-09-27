@@ -2,7 +2,6 @@ use std::sync::Arc;
 
 use crossterm::event::KeyEvent;
 use ratatui::Frame;
-use tokio::time::Instant;
 
 use crate::utils::Libs;
 
@@ -30,5 +29,5 @@ pub trait ScreenTrait {
         Some(())
     }
 
-    fn on_tick(&mut self, instant: Instant) { let _ = instant; }
+    fn on_tick(&mut self) {}
 }

@@ -7,7 +7,6 @@ use crossterm::event::{Event, EventStream, KeyCode, KeyEvent, KeyEventKind, KeyM
 use futures::StreamExt;
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
-use tokio::time::Instant;
 
 use crate::screens::authenticate::AuthenticateScreen;
 use crate::screens::home::HomeScreen;
@@ -54,7 +53,7 @@ impl App {
 
             tokio::select! {
                 _ = frames_interval.tick() => { terminal.draw(|frame| screen.render(frame))?; },
-                instant = ticks_interval.tick() => { self.on_tick(instant); },
+                _ = ticks_interval.tick() => { self.on_tick(); },
                 Some(Ok(event)) = events.next() => { self.handle_event(event); },
             }
         }
@@ -87,9 +86,9 @@ impl App {
         Some(())
     }
 
-    fn on_tick(&mut self, instant: Instant) {
+    fn on_tick(&mut self) {
         let screen = self.libs.screen.get_current();
         let screen = self.screens.get_mut(&screen).unwrap();
-        screen.on_tick(instant);
+        screen.on_tick();
     }
 }
