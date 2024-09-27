@@ -9,17 +9,16 @@ use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 use tokio::time::Instant;
 
+use crate::screens::authenticate::AuthenticateScreen;
 use crate::screens::home::HomeScreen;
 use crate::screens::login::LoginScreen;
 use crate::screens::{Screen, ScreenTrait};
-use crate::utils::config::Config;
-use crate::utils::immediate_rw_lock::ImmediateRwLock;
+use crate::utils::Libs;
 
 pub struct App {
-    exit:           bool,
-    screens:        HashMap<Screen, Box<dyn ScreenTrait>>,
-    current_screen: Arc<ImmediateRwLock<Screen>>,
-    config: Arc<Config>,
+    exit:    bool,
+    screens: HashMap<Screen, Box<dyn ScreenTrait>>,
+    libs:    Arc<Libs>,
 }
 
 impl App {
@@ -27,18 +26,17 @@ impl App {
     const TICKS_PER_SECOND: f32 = App::FRAMES_PER_SECOND / 10.0;
 
     pub fn new() -> App {
-        let current_screen = Arc::new(ImmediateRwLock::default());
-        let config = Arc::new(Config::new(None));
+        let libs = Arc::new(Libs::new());
         let mut screens: HashMap<Screen, Box<dyn ScreenTrait>> = HashMap::new();
 
-        screens.insert(Screen::Login, Box::new(LoginScreen::new(current_screen.clone(), config.clone())));
-        screens.insert(Screen::Home, Box::new(HomeScreen::new(current_screen.clone(), config.clone())));
+        screens.insert(Screen::Login, Box::new(LoginScreen::new(libs.clone())));
+        screens.insert(Screen::Home, Box::new(HomeScreen::new(libs.clone())));
+        screens.insert(Screen::Authenticate, Box::new(AuthenticateScreen::new(libs.clone())));
 
         Self {
             exit: false,
-            current_screen,
             screens,
-            config,
+            libs,
         }
     }
 
@@ -51,7 +49,8 @@ impl App {
         let mut events = EventStream::new();
 
         while !self.exit {
-            let screen = self.screens.get_mut(&self.current_screen.get().unwrap()).unwrap();
+            let screen = self.libs.screen.get().unwrap();
+            let screen = self.screens.get_mut(&screen).unwrap();
 
             tokio::select! {
                 _ = frames_interval.tick() => { terminal.draw(|frame| screen.render(frame))?; },
@@ -81,14 +80,16 @@ impl App {
             return None;
         }
 
-        let screen = self.screens.get_mut(&self.current_screen.get().unwrap()).unwrap();
+        let screen = self.libs.screen.get().unwrap();
+        let screen = self.screens.get_mut(&screen).unwrap();
         screen.on_key_pressed(event)?;
 
         Some(())
     }
 
     fn on_tick(&mut self, instant: Instant) {
-        let screen = self.screens.get_mut(&self.current_screen.get().unwrap()).unwrap();
+        let screen = self.libs.screen.get().unwrap();
+        let screen = self.screens.get_mut(&screen).unwrap();
         screen.on_tick(instant);
     }
 }

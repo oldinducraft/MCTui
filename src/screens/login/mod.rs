@@ -10,9 +10,8 @@ use ratatui::Frame;
 use tokio::time::Instant;
 
 use super::{Screen, ScreenTrait};
-use crate::utils::config::Config;
-use crate::utils::immediate_rw_lock::ImmediateRwLock;
 use crate::utils::ui::center::center;
+use crate::utils::Libs;
 use crate::widgets::window::Window;
 
 pub mod form;
@@ -20,9 +19,8 @@ pub mod form_state;
 pub mod login_request_state;
 
 pub struct LoginScreen {
-    form:           LoginFormState,
-    current_screen: Arc<ImmediateRwLock<Screen>>,
-    config:         Arc<Config>,
+    form: LoginFormState,
+    libs: Arc<Libs>,
 }
 
 const KEY_HINTS: [(&str, &str); 3] = [("Esc/Ctrl+C", "Exit"), ("Enter", "Submit"), ("Tab", "Next field")];
@@ -43,22 +41,7 @@ impl ScreenTrait for LoginScreen {
             KeyCode::Char(c) => self.form.add_char(c),
             KeyCode::Backspace => self.form.remove_char(),
             KeyCode::Tab => self.form.next_field(),
-            KeyCode::Enter => {
-                if self.form.login_request_state.get().unwrap() == LoginRequestState::Fulfilled {
-                    let mut lock = self.config.inner.write().unwrap();
-                    lock.username = Some(self.form.auth.username.clone());
-                    lock.password = Some(self.form.auth.password.clone());
-                    drop(lock);
-
-                    self.config.save();
-
-                    self.current_screen.set(Screen::Home).unwrap();
-
-                    return None;
-                }
-
-                self.form.submit();
-            },
+            KeyCode::Enter => self.submit_or_continue(),
             _ => return Some(()),
         };
 
@@ -67,11 +50,36 @@ impl ScreenTrait for LoginScreen {
 
     fn on_tick(&mut self, _instant: Instant) { self.form.on_tick(); }
 
-    fn new(current_screen: Arc<ImmediateRwLock<Screen>>, config: Arc<Config>) -> LoginScreen {
+    fn new(libs: Arc<Libs>) -> LoginScreen {
         LoginScreen {
             form: LoginFormState::default(),
-            current_screen,
-            config,
+            libs,
         }
+    }
+}
+
+impl LoginScreen {
+    fn save_credentials(&self) {
+        let mut lock = self.libs.config.inner.write().unwrap();
+        lock.username = Some(self.form.auth.username.clone());
+        lock.password = Some(self.form.auth.password.clone());
+        self.libs.config.save();
+    }
+
+    fn save_tokens(&self) {
+        let mut lock = self.libs.in_memory.write().unwrap();
+        lock.set_access_token(self.form.access_token.get().unwrap());
+        lock.set_client_token(self.form.client_token.get().unwrap());
+    }
+
+    fn submit_or_continue(&self) {
+        if self.form.login_request_state.get().unwrap() == LoginRequestState::Fulfilled {
+            self.save_credentials();
+            self.save_tokens();
+            self.libs.screen.set(Screen::Home).unwrap();
+            return;
+        }
+
+        self.form.submit();
     }
 }

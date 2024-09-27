@@ -1,5 +1,7 @@
 pub mod types;
 
+use std::time::Duration;
+
 use reqwest::{Client, RequestBuilder};
 use serde::Serialize;
 use types::{AuthenticateRequest, AuthenticateResponse, RequestResult, YggdrasilResponse};
@@ -12,7 +14,7 @@ pub struct Yggdrasil {
 impl Yggdrasil {
     pub fn new(base_url: String) -> Self {
         Self {
-            client: Client::new(),
+            client: Client::builder().timeout(Duration::from_secs(10)).build().unwrap(),
             base_url,
         }
     }

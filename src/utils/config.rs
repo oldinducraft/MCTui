@@ -1,15 +1,18 @@
-use std::{fs, path::Path, sync::RwLock};
+use std::fs;
+use std::path::Path;
+use std::sync::RwLock;
+
 use serde::{Deserialize, Serialize};
 
+const CONFIG_PATH: &str = "config.json";
+
 pub struct Config {
-    pub path: String,
     pub inner: RwLock<ConfigInner>,
 }
 
 impl Config {
-    pub fn new(path: Option<String>) -> Self {
+    pub fn new() -> Self {
         let this = Self {
-            path: path.unwrap_or_else(|| "config.json".to_string()),
             inner: RwLock::new(Default::default()),
         };
         this.load();
@@ -23,19 +26,17 @@ impl Config {
         }
 
         let mut lock = self.inner.write().unwrap();
-        let content = fs::read_to_string(&self.path).unwrap();
+        let content = fs::read_to_string(CONFIG_PATH).unwrap();
         *lock = serde_json::from_str(&content).unwrap();
     }
-    
+
     pub fn save(&self) {
         let lock = self.inner.read().unwrap();
         let content = serde_json::to_string(&*lock).unwrap();
-        fs::write(&self.path, content).unwrap();
+        fs::write(CONFIG_PATH, content).unwrap();
     }
 
-    fn config_exists(&self) -> bool {
-        Path::new(self.path.as_str()).exists()
-    }
+    fn config_exists(&self) -> bool { Path::new(CONFIG_PATH).exists() }
 }
 
 #[derive(Deserialize, Serialize, Default, Clone)]

@@ -22,6 +22,8 @@ pub struct LoginFormState {
     pub(super) throbber_state:      ThrobberState,
     pub(super) login_request_state: Arc<ImmediateRwLock<LoginRequestState>>,
     pub(super) login_request_error: Arc<ImmediateRwLock<String>>,
+    pub(super) access_token:        Arc<ImmediateRwLock<String>>,
+    pub(super) client_token:        Arc<ImmediateRwLock<String>>,
 }
 
 impl LoginFormState {
@@ -60,11 +62,14 @@ impl LoginFormState {
         }
     }
 
+    // TODO: Move out to LoginScreen
     pub fn submit(&self) {
         tokio::spawn(Self::login(
             self.login_request_state.clone(),
             self.login_request_error.clone(),
             self.auth.clone(),
+            self.access_token.clone(),
+            self.client_token.clone(),
         ));
     }
 
@@ -72,6 +77,8 @@ impl LoginFormState {
         login_request_state: Arc<ImmediateRwLock<LoginRequestState>>,
         login_request_error: Arc<ImmediateRwLock<String>>,
         auth: AuthenticateRequest,
+        access_token: Arc<ImmediateRwLock<String>>,
+        client_token: Arc<ImmediateRwLock<String>>,
     ) {
         login_request_state.set(LoginRequestState::Pending).unwrap();
 
@@ -87,7 +94,11 @@ impl LoginFormState {
         let res = client.authenticate(auth).await.unwrap();
 
         match res {
-            YggdrasilResponse::Success(_) => login_request_state.set(LoginRequestState::Fulfilled).unwrap(),
+            YggdrasilResponse::Success(tokens) => {
+                access_token.set(tokens.access_token).unwrap();
+                client_token.set(tokens.client_token).unwrap();
+                login_request_state.set(LoginRequestState::Fulfilled).unwrap();
+            },
             YggdrasilResponse::Error(err) => {
                 login_request_state.set(LoginRequestState::Rejected).unwrap();
                 login_request_error.set(err.error_message).unwrap();
