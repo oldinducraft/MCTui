@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::io::{self, Stdout};
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use crossterm::event::{Event, EventStream, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use futures::StreamExt;
@@ -28,9 +28,9 @@ impl App {
         let libs = Arc::new(Libs::new());
         let mut screens: HashMap<Screen, Box<dyn ScreenTrait>> = HashMap::new();
 
-        screens.insert(Screen::Login, Box::new(LoginScreen::new(libs.clone())));
+        screens.insert(Screen::Login(None), Box::new(LoginScreen::new(libs.clone())));
         screens.insert(Screen::Home, Box::new(HomeScreen::new(libs.clone())));
-        screens.insert(Screen::Authenticate, Box::new(AuthenticateScreen::new(libs.clone())));
+        screens.insert(Screen::Authenticate(Instant::now()), Box::new(AuthenticateScreen::new(libs.clone())));
 
         Self {
             exit: false,

@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::time::Instant;
 
 use crossterm::event::KeyCode;
 use ratatui::layout::{Alignment, Constraint, Flex, Layout};
@@ -69,12 +70,12 @@ impl ScreenTrait for HomeScreen {
     }
 
     fn new(libs: Arc<Libs>) -> HomeScreen {
-        if libs.in_memory.get_access_token().is_none() || libs.in_memory.get_client_token().is_none() {
-            libs.screen.goto(Screen::Authenticate);
-        }
-
-        if libs.in_memory.get_username().is_none() || libs.in_memory.get_uuid().is_none() {
-            libs.screen.goto(Screen::Authenticate);
+        if libs.in_memory.get_access_token().is_none() ||
+            libs.in_memory.get_client_token().is_none() ||
+            libs.in_memory.get_username().is_none() ||
+            libs.in_memory.get_uuid().is_none()
+        {
+            libs.screen.goto(Screen::Authenticate(Instant::now()));
         }
 
         HomeScreen { libs }
@@ -96,6 +97,6 @@ impl HomeScreen {
         self.libs.config.set_username(None);
         self.libs.config.set_password(None);
         self.libs.config.save();
-        self.libs.screen.goto(Screen::Login);
+        self.libs.screen.goto(Screen::Login(None));
     }
 }

@@ -1,30 +1,28 @@
 use std::sync::Arc;
+use std::time::Instant;
 
 use crossterm::event::{KeyCode, KeyEvent};
 use form::LoginForm;
 use form_state::LoginFormState;
-use ratatui::layout::{Constraint, Direction, Flex, Layout};
-use ratatui::style::Stylize;
+use ratatui::layout::{Alignment, Constraint, Direction, Flex, Layout};
+use ratatui::style::{Color, Style, Stylize};
+use ratatui::widgets::Paragraph;
 use ratatui::Frame;
-use request_loader::{RequestLoader, RequestLoaderState};
-use types::{LoginRequestState, Submit};
 
 use super::{Screen, ScreenTrait};
 use crate::utils::ui::center::center;
-use crate::utils::yggdrasil::types::{AuthenticateRequest, AuthenticateResponse, YggdrasilResponse};
-use crate::utils::yggdrasil::Yggdrasil;
 use crate::utils::Libs;
 use crate::widgets::window::Window;
 
 pub mod form;
 pub mod form_state;
-pub mod request_loader;
 pub mod types;
+pub mod arg;
 
 pub struct LoginScreen {
     form:           LoginFormState,
-    request_loader: RequestLoaderState,
     libs:           Arc<Libs>,
+    error:          Option<String>,
 }
 
 const KEY_HINTS: [(&str, &str); 3] = [("Esc/Ctrl+C", "Exit"), ("Enter", "Submit"), ("Tab", "Next field")];
@@ -46,7 +44,15 @@ impl ScreenTrait for LoginScreen {
 
         frame.render_widget(window, area);
         frame.render_stateful_widget(LoginForm, layout[0], &mut self.form);
-        frame.render_stateful_widget(RequestLoader, layout[1], &mut self.request_loader);
+
+        if let Some(err) = &self.error {
+            frame.render_widget(
+                Paragraph::new(err.as_str())
+                    .style(Style::default().fg(Color::Red))
+                    .alignment(Alignment::Center),
+                layout[2],
+            );
+        }
     }
 
     fn on_key_pressed(&mut self, event: KeyEvent) -> Option<()> {
@@ -54,72 +60,35 @@ impl ScreenTrait for LoginScreen {
             KeyCode::Char(c) => self.form.add_char(c),
             KeyCode::Backspace => self.form.remove_char(),
             KeyCode::Tab => self.form.next_field(),
-            KeyCode::Enter => self.submit_or_continue(),
+            KeyCode::Enter => self.submit(),
             _ => return Some(()),
         };
 
         None
     }
 
-    fn on_tick(&mut self) { self.request_loader.on_tick(); }
+    fn on_tick(&mut self) {
+        let screen = self.libs.screen.get_current();
+        
+        if let Screen::Login(Some(err)) = screen {
+            self.error = Some(err);
+        }
+    }
 
     fn new(libs: Arc<Libs>) -> LoginScreen {
         LoginScreen {
             form: LoginFormState::default(),
-            request_loader: RequestLoaderState::default(),
             libs,
+            error: None,
         }
     }
 }
 
 impl LoginScreen {
-    fn save_credentials(libs: Arc<Libs>, username: String, password: String) {
-        libs.config.set_username(Some(username));
-        libs.config.set_password(Some(password));
-        libs.config.save();
-    }
-
-    fn save_tokens(libs: Arc<Libs>, res: AuthenticateResponse) {
-        libs.in_memory.set_access_token(res.access_token);
-        libs.in_memory.set_client_token(res.client_token);
-    }
-
-    fn submit_or_continue(&self) {
-        if matches!(self.request_loader.state.get().unwrap(), LoginRequestState::Fulfilled) {
-            self.libs.screen.goto(Screen::Home);
-            return;
-        }
-
-        let s: Submit = self.into();
-        tokio::spawn(async move {
-            s.request_state.set(LoginRequestState::Pending).unwrap();
-
-            let res = LoginScreen::login(s.username.clone(), s.password.clone()).await;
-            match res {
-                Ok(res) => {
-                    s.request_state.set(LoginRequestState::Fulfilled).unwrap();
-                    LoginScreen::save_tokens(s.libs.clone(), res);
-                    LoginScreen::save_credentials(s.libs.clone(), s.username, s.password);
-                },
-                Err(err) => {
-                    s.request_state.set(LoginRequestState::Rejected(err)).unwrap();
-                },
-            }
-        });
-    }
-
-    async fn login(username: String, password: String) -> Result<AuthenticateResponse, String> {
-        if username.is_empty() || password.is_empty() {
-            return Err("Have you considered filling in all fields?".to_string());
-        }
-
-        let client = Yggdrasil::new();
-        let res = client.authenticate(AuthenticateRequest { username, password }).await;
-
-        match res {
-            Ok(YggdrasilResponse::Success(res)) => Ok(res),
-            Ok(YggdrasilResponse::Error(err)) => Err(err.error_message),
-            Err(err) => Err(err.to_string()),
-        }
+    fn submit(&self) {
+        self.libs.config.set_username(Some(self.form.username.clone()));
+        self.libs.config.set_password(Some(self.form.password.clone()));
+        self.libs.config.save();
+        self.libs.screen.goto(Screen::Authenticate(Instant::now()));
     }
 }

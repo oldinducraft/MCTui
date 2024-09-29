@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::time::Instant;
 
 use loader::Loader;
 use loader_state::LoaderState;
@@ -12,11 +13,14 @@ use crate::utils::yggdrasil::Yggdrasil;
 use crate::utils::Libs;
 use crate::widgets::window::Window;
 
+pub mod arg;
 mod loader;
 mod loader_state;
 
 pub struct AuthenticateScreen {
-    loader_state: LoaderState,
+    loader_state:   LoaderState,
+    last_called_at: Instant,
+    libs:           Arc<Libs>,
 }
 
 const KEY_HINTS: [(&str, &str); 1] = [("Esc/Ctrl+C", "Exit")];
@@ -34,35 +38,50 @@ impl ScreenTrait for AuthenticateScreen {
 
     fn new(libs: Arc<Libs>) -> AuthenticateScreen {
         if libs.config.get_username().is_none() {
-            libs.screen.goto(Screen::Login);
+            libs.screen.goto(Screen::Login(None));
         }
 
+        AuthenticateScreen {
+            loader_state: LoaderState::default(),
+            last_called_at: Instant::now(),
+            libs,
+        }
+    }
+
+    fn on_tick(&mut self) {
+        self.loader_state.on_tick();
+
+        let screen = self.libs.screen.get_current();
+
+        if let Screen::Authenticate(called_at) = screen {
+            if called_at != self.last_called_at {
+                self.last_called_at = called_at;
+                AuthenticateScreen::spawn_auth(self.libs.clone());
+            }
+        }
+    }
+}
+
+impl AuthenticateScreen {
+    fn spawn_auth(libs: Arc<Libs>) {
         tokio::spawn(async move {
             let auth = AuthenticateScreen::authenticate(libs.clone()).await;
-            if auth.is_none() {
-                libs.screen.goto(Screen::Login);
+            if let Some(YggdrasilResponse::Error(err)) = auth {
+                libs.screen.goto(Screen::Login(Some(err.error_message)));
                 return;
             }
 
             let profile = AuthenticateScreen::get_profile(libs.clone()).await;
-            if profile.is_none() {
-                libs.screen.goto(Screen::Login);
+            if let Some(YggdrasilResponse::Error(err)) = profile {
+                libs.screen.goto(Screen::Login(Some(err.error_message)));
                 return;
             }
 
             libs.screen.goto(Screen::Home);
         });
-
-        AuthenticateScreen {
-            loader_state: LoaderState::default(),
-        }
     }
 
-    fn on_tick(&mut self) { self.loader_state.on_tick(); }
-}
-
-impl AuthenticateScreen {
-    async fn authenticate(libs: Arc<Libs>) -> Option<()> {
+    async fn authenticate(libs: Arc<Libs>) -> Option<YggdrasilResponse> {
         let auth = AuthenticateScreen::get_authenticate_request(libs.clone())?;
 
         let client = Yggdrasil::new();
@@ -73,13 +92,13 @@ impl AuthenticateScreen {
                 libs.in_memory.set_access_token(tokens.access_token);
                 libs.in_memory.set_client_token(tokens.client_token);
 
-                Some(())
+                Some(YggdrasilResponse::Success(()))
             },
-            YggdrasilResponse::Error(_) => None,
+            YggdrasilResponse::Error(err) => Some(YggdrasilResponse::Error(err)),
         }
     }
 
-    async fn get_profile(libs: Arc<Libs>) -> Option<()> {
+    async fn get_profile(libs: Arc<Libs>) -> Option<YggdrasilResponse> {
         let username = libs.config.get_username()?;
 
         let client = Yggdrasil::new();
@@ -89,10 +108,10 @@ impl AuthenticateScreen {
             YggdrasilResponse::Success(profile) => {
                 libs.in_memory.set_username(profile.username);
                 libs.in_memory.set_uuid(profile.uuid);
-                
-                Some(())
+
+                Some(YggdrasilResponse::Success(()))
             },
-            YggdrasilResponse::Error(_) => None,
+            YggdrasilResponse::Error(err) => Some(YggdrasilResponse::Error(err)),
         }
     }
 

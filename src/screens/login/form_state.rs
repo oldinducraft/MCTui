@@ -12,10 +12,10 @@ pub struct LoginFormState {
 impl LoginFormState {
     pub(super) fn get_style_for(&self, field: Field) -> Style {
         if field == self.active_field {
-            Style::default().fg(Color::Yellow)
-        } else {
-            Style::default()
+            return Style::default().fg(Color::Yellow);
         }
+        
+        Style::default()
     }
 
     pub fn next_field(&mut self) {
