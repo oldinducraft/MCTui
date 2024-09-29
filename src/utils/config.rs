@@ -38,14 +38,14 @@ impl Config {
 
     fn config_exists(&self) -> bool { Path::new(CONFIG_PATH).exists() }
 
-    pub fn set_username(&self, username: String) {
+    pub fn set_username(&self, username: Option<String>) {
         let mut lock = self.inner.write().unwrap();
-        lock.username = Some(username);
+        lock.username = username;
     }
 
-    pub fn set_password(&self, password: String) {
+    pub fn set_password(&self, password: Option<String>) {
         let mut lock = self.inner.write().unwrap();
-        lock.password = Some(password);
+        lock.password = password;
     }
 
     pub fn get_username(&self) -> Option<String> { self.inner.read().unwrap().username.clone() }

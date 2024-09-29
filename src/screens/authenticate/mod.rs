@@ -37,7 +37,21 @@ impl ScreenTrait for AuthenticateScreen {
             libs.screen.goto(Screen::Login);
         }
 
-        tokio::spawn(AuthenticateScreen::authenticate(libs));
+        tokio::spawn(async move {
+            let auth = AuthenticateScreen::authenticate(libs.clone()).await;
+            if auth.is_none() {
+                libs.screen.goto(Screen::Login);
+                return;
+            }
+
+            let profile = AuthenticateScreen::get_profile(libs.clone()).await;
+            if profile.is_none() {
+                libs.screen.goto(Screen::Login);
+                return;
+            }
+
+            libs.screen.goto(Screen::Home);
+        });
 
         AuthenticateScreen {
             loader_state: LoaderState::default(),
@@ -52,23 +66,34 @@ impl AuthenticateScreen {
         let auth = AuthenticateScreen::get_authenticate_request(libs.clone())?;
 
         let client = Yggdrasil::new();
-        let Ok(res) = client.authenticate(auth).await else {
-            libs.screen.goto(Screen::Login);
-            return None;
-        };
+        let res = client.authenticate(auth).await.ok()?;
 
         match res {
             YggdrasilResponse::Success(tokens) => {
                 libs.in_memory.set_access_token(tokens.access_token);
                 libs.in_memory.set_client_token(tokens.client_token);
-                libs.screen.goto(Screen::Home);
-            },
-            YggdrasilResponse::Error(_) => {
-                libs.screen.goto(Screen::Login);
-            },
-        };
 
-        Some(())
+                Some(())
+            },
+            YggdrasilResponse::Error(_) => None,
+        }
+    }
+
+    async fn get_profile(libs: Arc<Libs>) -> Option<()> {
+        let username = libs.config.get_username()?;
+
+        let client = Yggdrasil::new();
+        let res = client.get_profile(&username).await.ok()?;
+
+        match res {
+            YggdrasilResponse::Success(profile) => {
+                libs.in_memory.set_username(profile.username);
+                libs.in_memory.set_uuid(profile.uuid);
+                
+                Some(())
+            },
+            YggdrasilResponse::Error(_) => None,
+        }
     }
 
     fn get_authenticate_request(libs: Arc<Libs>) -> Option<AuthenticateRequest> {

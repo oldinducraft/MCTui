@@ -54,7 +54,7 @@ impl ScreenTrait for LoginScreen {
             KeyCode::Char(c) => self.form.add_char(c),
             KeyCode::Backspace => self.form.remove_char(),
             KeyCode::Tab => self.form.next_field(),
-            KeyCode::Enter => self.submit_or_continue((&*self).into()),
+            KeyCode::Enter => self.submit_or_continue(),
             _ => return Some(()),
         };
 
@@ -74,8 +74,8 @@ impl ScreenTrait for LoginScreen {
 
 impl LoginScreen {
     fn save_credentials(libs: Arc<Libs>, username: String, password: String) {
-        libs.config.set_username(username);
-        libs.config.set_password(password);
+        libs.config.set_username(Some(username));
+        libs.config.set_password(Some(password));
         libs.config.save();
     }
 
@@ -84,12 +84,13 @@ impl LoginScreen {
         libs.in_memory.set_client_token(res.client_token);
     }
 
-    fn submit_or_continue(&self, s: Submit) {
+    fn submit_or_continue(&self) {
         if matches!(self.request_loader.state.get().unwrap(), LoginRequestState::Fulfilled) {
             self.libs.screen.goto(Screen::Home);
             return;
         }
 
+        let s: Submit = self.into();
         tokio::spawn(async move {
             s.request_state.set(LoginRequestState::Pending).unwrap();
 
@@ -99,7 +100,6 @@ impl LoginScreen {
                     s.request_state.set(LoginRequestState::Fulfilled).unwrap();
                     LoginScreen::save_tokens(s.libs.clone(), res);
                     LoginScreen::save_credentials(s.libs.clone(), s.username, s.password);
-                    s.libs.screen.goto(Screen::Home);
                 },
                 Err(err) => {
                     s.request_state.set(LoginRequestState::Rejected(err)).unwrap();
