@@ -83,7 +83,7 @@ impl ScreenTrait for HomeScreen {
 
     fn on_key_pressed(&mut self, event: crossterm::event::KeyEvent) -> Option<()> {
         match event.code {
-            KeyCode::Enter => unimplemented!(),
+            KeyCode::Enter => self.libs.screen.goto(Screen::Download),
             KeyCode::Delete => self.log_out(),
             _ => return Some(()),
         };

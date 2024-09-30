@@ -8,6 +8,7 @@ mod screens;
 mod tui;
 mod utils;
 mod widgets;
+mod constants;
 
 #[tokio::main]
 async fn main() -> io::Result<()> {

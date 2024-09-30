@@ -32,13 +32,12 @@ impl ScreenTrait for LoginScreen {
         let window = Window::new("Who tf are you".bold().red(), &KEY_HINTS);
 
         let width_constraint = Constraint::Length((frame.area().width / 2).max(window.max_width() as u16));
-        let area = center(frame.area(), width_constraint, Constraint::Percentage(50));
+        let area = center(frame.area(), width_constraint, Constraint::Percentage(70));
 
         let layout = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([Constraint::Fill(2), Constraint::Length(1), Constraint::Fill(1)].as_ref())
+            .constraints([Constraint::Fill(1), Constraint::Fill(1)].as_ref())
             .margin(2)
-            .spacing(2)
             .flex(Flex::Center)
             .split(area);
 
@@ -50,7 +49,7 @@ impl ScreenTrait for LoginScreen {
                 Paragraph::new(err.as_str())
                     .style(Style::default().fg(Color::Red))
                     .alignment(Alignment::Center),
-                layout[2],
+                layout[1],
             );
         }
     }

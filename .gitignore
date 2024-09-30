@@ -1,2 +1,5 @@
 /target
 config.json
+*.tar.gz
+client
+hash.txt

@@ -12,12 +12,16 @@ use crate::utils::Libs;
 pub mod authenticate;
 pub mod home;
 pub mod login;
+pub mod download;
+pub mod unpack;
 
 #[derive(Clone)]
 pub enum Screen {
     Login(ErrorMessage),
     Home,
     Authenticate(CalledAt),
+    Download,
+    Unpack
 }
 
 impl Default for Screen {

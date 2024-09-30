@@ -6,7 +6,7 @@ use reqwest::{Client, RequestBuilder};
 use serde::Serialize;
 use types::{AuthenticateRequest, AuthenticateResponse, ProfileResponse, RequestResult, YggdrasilResponse};
 
-const YGGDRASIL_HOST: &str = "https://wayaway.asuscomm.com";
+use crate::constants::YGGDRASIL_HOST;
 
 pub struct Yggdrasil {
     client: Client,

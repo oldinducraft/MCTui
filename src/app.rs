@@ -9,8 +9,10 @@ use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 
 use crate::screens::authenticate::AuthenticateScreen;
+use crate::screens::download::DownloadScreen;
 use crate::screens::home::HomeScreen;
 use crate::screens::login::LoginScreen;
+use crate::screens::unpack::UnpackScreen;
 use crate::screens::{Screen, ScreenTrait};
 use crate::utils::Libs;
 
@@ -31,6 +33,8 @@ impl App {
         screens.insert(Screen::Login(None), Box::new(LoginScreen::new(libs.clone())));
         screens.insert(Screen::Home, Box::new(HomeScreen::new(libs.clone())));
         screens.insert(Screen::Authenticate(Instant::now()), Box::new(AuthenticateScreen::new(libs.clone())));
+        screens.insert(Screen::Download, Box::new(DownloadScreen::new(libs.clone())));
+        screens.insert(Screen::Unpack, Box::new(UnpackScreen::new(libs.clone())));
 
         Self {
             exit: false,

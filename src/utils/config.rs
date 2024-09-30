@@ -4,7 +4,7 @@ use std::sync::RwLock;
 
 use serde::{Deserialize, Serialize};
 
-const CONFIG_PATH: &str = "config.json";
+use crate::constants::CONFIG_PATH;
 
 pub struct Config {
     inner: RwLock<ConfigInner>,
