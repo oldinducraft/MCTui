@@ -1,69 +1,36 @@
 use std::sync::Arc;
-use std::time::Instant;
 
-use loader::Loader;
-use loader_state::LoaderState;
-use ratatui::layout::Constraint;
-use ratatui::Frame;
+use tokio::task::JoinHandle;
+use ui::loader_state::LoaderState;
 
-use super::{Screen, ScreenTrait};
-use crate::utils::ui::center::center;
+use super::{CreatableScreenTrait, Screen, ScreenTrait};
 use crate::utils::yggdrasil::types::{AuthenticateRequest, YggdrasilResponse};
 use crate::utils::yggdrasil::Yggdrasil;
 use crate::utils::Libs;
-use crate::widgets::window::Window;
 
-pub mod arg;
-mod loader;
-mod loader_state;
+mod events;
+mod ui;
 
 pub struct AuthenticateScreen {
-    loader_state:   LoaderState,
-    last_called_at: Instant,
-    libs:           Arc<Libs>,
+    loader_state: LoaderState,
+    libs:         Arc<Libs>,
+    handle:       Option<JoinHandle<()>>,
 }
 
-const KEY_HINTS: [(&str, &str); 1] = [("Esc/Ctrl+C", "Exit")];
+impl ScreenTrait for AuthenticateScreen {}
 
-impl ScreenTrait for AuthenticateScreen {
-    fn render(&mut self, frame: &mut Frame) {
-        let window = Window::new("Authenticate".into(), &KEY_HINTS);
-
-        let width_constraint = Constraint::Length((frame.area().width / 2).max(window.max_width() as u16));
-        let area = center(frame.area(), width_constraint, Constraint::Length(10));
-
-        frame.render_widget(window, area);
-        frame.render_stateful_widget(Loader, area, &mut self.loader_state);
-    }
-
+impl CreatableScreenTrait for AuthenticateScreen {
     fn new(libs: Arc<Libs>) -> AuthenticateScreen {
-        if libs.config.get_username().is_none() {
-            libs.screen.goto(Screen::Login(None));
-        }
-
         AuthenticateScreen {
             loader_state: LoaderState::default(),
-            last_called_at: Instant::now(),
             libs,
-        }
-    }
-
-    fn on_tick(&mut self) {
-        self.loader_state.on_tick();
-
-        let screen = self.libs.screen.get_current();
-
-        if let Screen::Authenticate(called_at) = screen {
-            if called_at != self.last_called_at {
-                self.last_called_at = called_at;
-                AuthenticateScreen::spawn_auth(self.libs.clone());
-            }
+            handle: None,
         }
     }
 }
 
 impl AuthenticateScreen {
-    fn spawn_auth(libs: Arc<Libs>) {
+    fn spawn_auth(libs: Arc<Libs>) -> JoinHandle<()> {
         tokio::spawn(async move {
             let auth = AuthenticateScreen::authenticate(libs.clone()).await;
             if let Some(YggdrasilResponse::Error(err)) = auth {
@@ -78,7 +45,7 @@ impl AuthenticateScreen {
             }
 
             libs.screen.goto(Screen::Home);
-        });
+        })
     }
 
     async fn authenticate(libs: Arc<Libs>) -> Option<YggdrasilResponse> {

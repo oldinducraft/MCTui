@@ -1,11 +1,11 @@
 use ratatui::style::{Color, Style};
 
-use super::types::Field;
+use crate::screens::login::types::Field;
 
 #[derive(Default, Clone)]
 pub struct LoginFormState {
-    pub(super) username:     String,
-    pub(super) password:     String,
+    pub username:            String,
+    pub password:            String,
     pub(super) active_field: Field,
 }
 
@@ -14,7 +14,7 @@ impl LoginFormState {
         if field == self.active_field {
             return Style::default().fg(Color::Yellow);
         }
-        
+
         Style::default()
     }
 

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::io::{self, Stdout};
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use crossterm::event::{Event, EventStream, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use futures::StreamExt;
@@ -13,7 +13,8 @@ use crate::screens::download::DownloadScreen;
 use crate::screens::home::HomeScreen;
 use crate::screens::login::LoginScreen;
 use crate::screens::unpack::UnpackScreen;
-use crate::screens::{Screen, ScreenTrait};
+use crate::screens::verify::VerifyScreen;
+use crate::screens::{CreatableScreenTrait, Screen, ScreenTrait};
 use crate::utils::Libs;
 
 pub struct App {
@@ -32,9 +33,11 @@ impl App {
 
         screens.insert(Screen::Login(None), Box::new(LoginScreen::new(libs.clone())));
         screens.insert(Screen::Home, Box::new(HomeScreen::new(libs.clone())));
-        screens.insert(Screen::Authenticate(Instant::now()), Box::new(AuthenticateScreen::new(libs.clone())));
+        screens.insert(Screen::Authenticate, Box::new(AuthenticateScreen::new(libs.clone())));
         screens.insert(Screen::Download, Box::new(DownloadScreen::new(libs.clone())));
         screens.insert(Screen::Unpack, Box::new(UnpackScreen::new(libs.clone())));
+        screens.insert(Screen::Unpack, Box::new(UnpackScreen::new(libs.clone())));
+        screens.insert(Screen::Verify, Box::new(VerifyScreen::new(libs.clone())));
 
         Self {
             exit: false,
@@ -74,12 +77,12 @@ impl App {
 
     fn on_key_pressed(&mut self, event: KeyEvent) -> Option<()> {
         if event.code == KeyCode::Esc {
-            self.exit = true;
+            self.on_exit();
             return None;
         }
 
         if event.modifiers == KeyModifiers::CONTROL && event.code == KeyCode::Char('c') {
-            self.exit = true;
+            self.on_exit();
             return None;
         }
 
@@ -93,6 +96,19 @@ impl App {
     fn on_tick(&mut self) {
         let screen = self.libs.screen.get_current();
         let screen = self.screens.get_mut(&screen).unwrap();
+
+        if self.libs.screen.handle_screen_changed() {
+            screen.on_screen_changed();
+        }
+
         screen.on_tick();
+    }
+
+    fn on_exit(&mut self) {
+        let screen = self.libs.screen.get_current();
+        let screen = self.screens.get_mut(&screen).unwrap();
+        screen.on_exit();
+
+        self.exit = true;
     }
 }

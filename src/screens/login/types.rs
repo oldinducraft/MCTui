@@ -4,3 +4,5 @@ pub enum Field {
     Username,
     Password,
 }
+
+pub type ErrorMessage = Option<String>;

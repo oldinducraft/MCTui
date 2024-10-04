@@ -4,11 +4,11 @@ use app::App;
 use tui::Tui;
 
 mod app;
+mod constants;
 mod screens;
 mod tui;
 mod utils;
 mod widgets;
-mod constants;
 
 #[tokio::main]
 async fn main() -> io::Result<()> {

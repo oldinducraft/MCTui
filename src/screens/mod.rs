@@ -1,31 +1,28 @@
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
-use std::time::Instant;
 
-use authenticate::arg::CalledAt;
 use crossterm::event::KeyEvent;
-use login::arg::ErrorMessage;
+use login::types::ErrorMessage;
 use ratatui::Frame;
 
 use crate::utils::Libs;
 
 pub mod authenticate;
+pub mod download;
 pub mod home;
 pub mod login;
-pub mod download;
 pub mod unpack;
+pub mod verify;
 
-#[derive(Clone)]
+#[derive(Default, Clone)]
 pub enum Screen {
     Login(ErrorMessage),
     Home,
-    Authenticate(CalledAt),
+    #[default]
+    Authenticate,
     Download,
-    Unpack
-}
-
-impl Default for Screen {
-    fn default() -> Self { Self::Authenticate(Instant::now()) }
+    Unpack,
+    Verify,
 }
 
 impl Hash for Screen {
@@ -38,17 +35,27 @@ impl PartialEq for Screen {
 
 impl Eq for Screen {}
 
-pub trait ScreenTrait {
-    fn new(libs: Arc<Libs>) -> Self
-    where
-        Self: Sized;
+pub trait ScreenTrait: RenderableScreenTrait + ScreenEventsTrait + CreatableScreenTrait {}
 
+pub trait RenderableScreenTrait {
     fn render(&mut self, frame: &mut Frame);
+}
 
+pub trait ScreenEventsTrait {
     fn on_key_pressed(&mut self, event: KeyEvent) -> Option<()> {
         let _ = event;
         Some(())
     }
 
     fn on_tick(&mut self) {}
+
+    fn on_screen_changed(&mut self) {}
+
+    fn on_exit(&mut self) {}
+}
+
+pub trait CreatableScreenTrait {
+    fn new(libs: Arc<Libs>) -> Self
+    where
+        Self: Sized;
 }

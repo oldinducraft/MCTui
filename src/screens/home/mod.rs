@@ -1,95 +1,19 @@
 use std::sync::Arc;
-use std::time::Instant;
 
-use crossterm::event::KeyCode;
-use ratatui::layout::{Alignment, Constraint, Flex, Layout};
-use ratatui::style::Stylize;
-use ratatui::text::Line;
-use ratatui::widgets::Paragraph;
-use ratatui::Frame;
-use tui_widgets::big_text::{BigText, PixelSize};
-
-use super::{Screen, ScreenTrait};
+use super::{CreatableScreenTrait, Screen, ScreenTrait};
 use crate::utils::Libs;
+
+pub mod event;
+pub mod ui;
 
 pub struct HomeScreen {
     libs: Arc<Libs>,
 }
 
-impl ScreenTrait for HomeScreen {
-    fn render(&mut self, frame: &mut Frame) {
-        let layout = Layout::default()
-            .constraints([Constraint::Fill(1), Constraint::Fill(1)])
-            .flex(Flex::Center)
-            .split(frame.area());
+impl ScreenTrait for HomeScreen {}
 
-        let big_text = BigText::builder()
-            .pixel_size(PixelSize::Full)
-            .lines(vec!["Oldindcraft".into()])
-            .centered()
-            .build();
-        frame.render_widget(big_text, layout[0]);
-
-        let text = vec![
-            Line::from(vec![
-                "Hi, ".bold(),
-                self.libs
-                    .config
-                    .get_username()
-                    .unwrap_or("???".to_string())
-                    .light_magenta()
-                    .bold(),
-                "!".bold(),
-            ]),
-            Line::from(vec![]),
-            Line::from(vec![
-                "To ".into(),
-                "play".cyan().bold(),
-                " press ".into(),
-                "<Enter>".cyan().bold(),
-                ",".into(),
-            ]),
-            Line::from(vec![
-                "To ".into(),
-                "log out".red().bold(),
-                " press ".into(),
-                "<Del>".red().bold(),
-                ",".into(),
-            ]),
-            Line::from(vec![
-                "To ".into(),
-                "exit".yellow().bold(),
-                " press ".into(),
-                "<Ctrl+C".yellow().bold(),
-                " / ".into(),
-                "Esc>".yellow().bold(),
-            ]),
-        ];
-
-        frame.render_widget(Paragraph::new(text).alignment(Alignment::Center), layout[1]);
-    }
-
-    fn new(libs: Arc<Libs>) -> HomeScreen {
-        if libs.in_memory.get_access_token().is_none() ||
-            libs.in_memory.get_client_token().is_none() ||
-            libs.in_memory.get_username().is_none() ||
-            libs.in_memory.get_uuid().is_none()
-        {
-            libs.screen.goto(Screen::Authenticate(Instant::now()));
-        }
-
-        HomeScreen { libs }
-    }
-
-    fn on_key_pressed(&mut self, event: crossterm::event::KeyEvent) -> Option<()> {
-        match event.code {
-            KeyCode::Enter => self.libs.screen.goto(Screen::Download),
-            KeyCode::Delete => self.log_out(),
-            _ => return Some(()),
-        };
-
-        None
-    }
+impl CreatableScreenTrait for HomeScreen {
+    fn new(libs: Arc<Libs>) -> HomeScreen { HomeScreen { libs } }
 }
 
 impl HomeScreen {

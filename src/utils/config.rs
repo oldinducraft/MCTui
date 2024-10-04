@@ -49,7 +49,7 @@ impl Config {
     }
 
     pub fn get_username(&self) -> Option<String> { self.inner.read().unwrap().username.clone() }
-    
+
     pub fn get_password(&self) -> Option<String> { self.inner.read().unwrap().password.clone() }
 }
 

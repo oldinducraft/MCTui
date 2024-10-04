@@ -35,5 +35,5 @@ pub struct ProfileResponse {
     #[serde(rename = "name")]
     pub username: String,
     #[serde(rename = "id")]
-    pub uuid: String,
+    pub uuid:     String,
 }

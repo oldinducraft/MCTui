@@ -30,6 +30,13 @@ impl InMemory {
     fn read(&self) -> RwLockReadGuard<InMemoryInner> { self.inner.read().unwrap() }
 
     fn write(&self) -> RwLockWriteGuard<InMemoryInner> { self.inner.write().unwrap() }
+
+    pub fn auth_args_are_set(&self) -> bool {
+        self.read().access_token.is_some() &&
+            self.read().client_token.is_some() &&
+            self.read().username.is_some() &&
+            self.read().uuid.is_some()
+    }
 }
 
 #[derive(Default)]

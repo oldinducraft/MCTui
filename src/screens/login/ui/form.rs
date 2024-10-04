@@ -3,7 +3,7 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Block, Paragraph, StatefulWidget};
 
 use super::form_state::LoginFormState;
-use super::types::Field;
+use crate::screens::login::types::Field;
 
 #[derive(Default)]
 pub struct LoginForm;
