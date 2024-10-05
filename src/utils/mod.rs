@@ -8,6 +8,7 @@ pub mod in_memory;
 pub mod screen_manager;
 pub mod ui;
 pub mod yggdrasil;
+pub mod requester;
 
 pub struct Libs {
     pub screen:    ScreenManager,

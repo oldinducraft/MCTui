@@ -13,6 +13,7 @@ impl<T: Clone> ImmediateRwLock<T> {
 
     /// Acquires a write lock, blocking the current thread until lock can be
     /// acquired
+    #[allow(dead_code)]
     pub fn write_lock(&self) -> LockResult<RwLockWriteGuard<T>> { self.inner.write() }
 
     /// Attempts to set the value blocking the current thread until lock can be

@@ -7,6 +7,7 @@ use tar::Archive;
 use tokio::task::JoinHandle;
 
 use super::{CreatableScreenTrait, Screen, ScreenTrait};
+use crate::constants::{CLIENT_ARCHIVE_FILENAME, CLIENT_FOLDER_NAME};
 use crate::utils::Libs;
 use crate::widgets::progress_state::ProgressState;
 
@@ -33,19 +34,16 @@ impl CreatableScreenTrait for UnpackScreen {
 
 impl UnpackScreen {
     pub async fn unpack(progress_state: Arc<ProgressState>, libs: Arc<Libs>) {
-        let tar_gz_path = "client.tar.gz";
-        let output_dir = "client";
-
-        if fs::metadata(tar_gz_path).is_err() {
+        if fs::metadata(CLIENT_ARCHIVE_FILENAME).is_err() {
             libs.screen.goto(Screen::Download);
             return;
         }
 
-        if fs::metadata(output_dir).is_err() {
-            fs::create_dir(output_dir).unwrap_or_else(|err| panic!("Failed to create output dir: {}", err));
+        if fs::metadata(CLIENT_FOLDER_NAME).is_err() {
+            fs::create_dir(CLIENT_FOLDER_NAME).unwrap_or_else(|err| panic!("Failed to create output dir: {}", err));
         }
 
-        let tar_gz = File::open(tar_gz_path).unwrap_or_else(|err| panic!("Failed to open tar.gz: {}", err));
+        let tar_gz = File::open(CLIENT_ARCHIVE_FILENAME).unwrap_or_else(|err| panic!("Failed to open tar.gz: {}", err));
         let total_size = tar_gz
             .metadata()
             .unwrap_or_else(|err| panic!("Failed to get tar.gz metadata: {}", err))
@@ -59,7 +57,7 @@ impl UnpackScreen {
             let mut entry = entry.unwrap();
             let file_size = entry.header().size().expect("Failed to get file size");
             entry
-                .unpack_in(output_dir)
+                .unpack_in(CLIENT_FOLDER_NAME)
                 .unwrap_or_else(|err| panic!("Failed to unpack entry: {}", err));
 
             processed_size += file_size;

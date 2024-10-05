@@ -11,12 +11,16 @@ impl InMemory {
         }
     }
 
+    #[allow(dead_code)]
     pub fn get_access_token(&self) -> Option<String> { self.read().access_token.clone() }
 
+    #[allow(dead_code)]
     pub fn get_client_token(&self) -> Option<String> { self.read().client_token.clone() }
 
+    #[allow(dead_code)]
     pub fn get_username(&self) -> Option<String> { self.read().username.clone() }
 
+    #[allow(dead_code)]
     pub fn get_uuid(&self) -> Option<String> { self.read().uuid.clone() }
 
     pub fn set_access_token(&self, value: String) { self.write().access_token = Some(value); }

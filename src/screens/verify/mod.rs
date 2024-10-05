@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::fs::{self};
 use std::sync::Arc;
 
@@ -6,7 +5,8 @@ use merkle_hash::{Algorithm, Encodable, MerkleTree};
 use tokio::task::JoinHandle;
 
 use super::{CreatableScreenTrait, Screen, ScreenTrait};
-use crate::constants::HASH_URL;
+use crate::constants::CLIENT_FOLDER_NAME;
+use crate::utils::requester::Requester;
 use crate::utils::Libs;
 use crate::widgets::progress_state::ProgressState;
 
@@ -33,24 +33,17 @@ impl CreatableScreenTrait for VerifyScreen {
 
 impl VerifyScreen {
     pub async fn verify(libs: Arc<Libs>) {
-        if fs::metadata("client").is_err() {
+        if fs::metadata(CLIENT_FOLDER_NAME).is_err() {
             libs.screen.goto(Screen::Download);
             return;
         }
 
-        let tree = MerkleTree::builder("client")
+        let tree = MerkleTree::builder(CLIENT_FOLDER_NAME)
             .algorithm(Algorithm::Blake3)
             .build()
             .unwrap();
 
-        let hash = reqwest::get(HASH_URL)
-            .await
-            .unwrap_or_else(|err| panic!("Failed to get hash: {}", err))
-            .text()
-            .await
-            .unwrap();
-        let hash = serde_json::from_str::<HashMap<String, String>>(&hash)
-            .unwrap_or_else(|err| panic!("Failed to parse hash: {}", err));
+        let hash = Requester::new().get_client_hash().await;
 
         for item in tree {
             if !item.path.absolute.is_file() {
@@ -59,6 +52,7 @@ impl VerifyScreen {
 
             let right = hash
                 .get(&item.path.relative.to_string())
+                // TODO: Fix paths on Windows
                 .unwrap_or_else(|| panic!("Failed to get hash: {}", item.path.relative));
             if item.hash.to_hex_string() != *right {
                 libs.screen.goto(Screen::Download);
