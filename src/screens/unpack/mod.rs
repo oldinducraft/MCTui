@@ -42,11 +42,14 @@ impl UnpackScreen {
         }
 
         if fs::metadata(output_dir).is_err() {
-            fs::create_dir(output_dir).unwrap();
+            fs::create_dir(output_dir).unwrap_or_else(|err| panic!("Failed to create output dir: {}", err));
         }
 
-        let tar_gz = File::open(tar_gz_path).unwrap();
-        let total_size = tar_gz.metadata().unwrap().len();
+        let tar_gz = File::open(tar_gz_path).unwrap_or_else(|err| panic!("Failed to open tar.gz: {}", err));
+        let total_size = tar_gz
+            .metadata()
+            .unwrap_or_else(|err| panic!("Failed to get tar.gz metadata: {}", err))
+            .len();
         let tar = GzDecoder::new(BufReader::new(tar_gz));
         let mut archive = Archive::new(tar);
 
@@ -54,8 +57,10 @@ impl UnpackScreen {
 
         for entry in archive.entries().unwrap() {
             let mut entry = entry.unwrap();
-            let file_size = entry.header().size().unwrap();
-            entry.unpack_in(output_dir).unwrap();
+            let file_size = entry.header().size().expect("Failed to get file size");
+            entry
+                .unpack_in(output_dir)
+                .unwrap_or_else(|err| panic!("Failed to unpack entry: {}", err));
 
             processed_size += file_size;
             let new_percent = processed_size as f64 / total_size as f64;

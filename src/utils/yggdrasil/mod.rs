@@ -22,7 +22,8 @@ impl Yggdrasil {
     pub async fn authenticate(&self, auth: AuthenticateRequest) -> RequestResult<AuthenticateResponse> {
         let result = self.post("auth/authenticate", auth).send().await?.text().await?;
 
-        let response = serde_json::from_str::<YggdrasilResponse<AuthenticateResponse>>(&result).unwrap();
+        let response = serde_json::from_str::<YggdrasilResponse<AuthenticateResponse>>(&result)
+            .unwrap_or_else(|err| panic!("Failed to parse authenticate response: {}", err));
         Ok(response)
     }
 
@@ -34,7 +35,8 @@ impl Yggdrasil {
             .text()
             .await?;
 
-        let response = serde_json::from_str::<YggdrasilResponse<ProfileResponse>>(&result).unwrap();
+        let response = serde_json::from_str::<YggdrasilResponse<ProfileResponse>>(&result)
+            .unwrap_or_else(|err| panic!("Failed to parse profile response: {}", err));
         Ok(response)
     }
 

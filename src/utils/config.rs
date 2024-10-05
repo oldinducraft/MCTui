@@ -1,6 +1,6 @@
 use std::fs;
 use std::path::Path;
-use std::sync::RwLock;
+use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use serde::{Deserialize, Serialize};
 
@@ -25,32 +25,41 @@ impl Config {
             return;
         }
 
-        let mut lock = self.inner.write().unwrap();
-        let content = fs::read_to_string(CONFIG_PATH).unwrap();
-        *lock = serde_json::from_str(&content).unwrap();
+        let mut lock = self
+            .inner
+            .write()
+            .unwrap_or_else(|err| panic!("Failed to lock config: {}", err));
+        let content = fs::read_to_string(CONFIG_PATH).unwrap_or_else(|err| panic!("Failed to read config: {}", err));
+        *lock = serde_json::from_str(&content).unwrap_or_else(|err| panic!("Failed to parse config: {}", err));
     }
 
     pub fn save(&self) {
-        let lock = self.inner.read().unwrap();
-        let content = serde_json::to_string(&*lock).unwrap();
-        fs::write(CONFIG_PATH, content).unwrap();
+        let lock = self.read();
+        let content = serde_json::to_string(&*lock).unwrap_or_else(|err| panic!("Failed to serialize config: {}", err));
+        fs::write(CONFIG_PATH, content).unwrap_or_else(|err| panic!("Failed to write config: {}", err));
     }
 
     fn config_exists(&self) -> bool { Path::new(CONFIG_PATH).exists() }
 
-    pub fn set_username(&self, username: Option<String>) {
-        let mut lock = self.inner.write().unwrap();
-        lock.username = username;
+    pub fn set_username(&self, username: Option<String>) { self.write().username = username; }
+
+    pub fn set_password(&self, password: Option<String>) { self.write().password = password; }
+
+    pub fn get_username(&self) -> Option<String> { self.read().username.clone() }
+
+    pub fn get_password(&self) -> Option<String> { self.read().password.clone() }
+
+    fn write(&self) -> RwLockWriteGuard<ConfigInner> {
+        self.inner
+            .write()
+            .unwrap_or_else(|err| panic!("Failed to lock config (write): {}", err))
     }
 
-    pub fn set_password(&self, password: Option<String>) {
-        let mut lock = self.inner.write().unwrap();
-        lock.password = password;
+    fn read(&self) -> RwLockReadGuard<ConfigInner> {
+        self.inner
+            .read()
+            .unwrap_or_else(|err| panic!("Failed to lock config (read): {}", err))
     }
-
-    pub fn get_username(&self) -> Option<String> { self.inner.read().unwrap().username.clone() }
-
-    pub fn get_password(&self) -> Option<String> { self.inner.read().unwrap().password.clone() }
 }
 
 #[derive(Deserialize, Serialize, Default, Clone)]

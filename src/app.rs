@@ -56,7 +56,7 @@ impl App {
 
         while !self.exit {
             let screen = self.libs.screen.get_current();
-            let screen = self.screens.get_mut(&screen).unwrap();
+            let screen = self.screens.get_mut(&screen).unwrap_or_else(|| panic!("Unknown screen: {:?}", screen));
 
             tokio::select! {
                 _ = frames_interval.tick() => { terminal.draw(|frame| screen.render(frame))?; },
@@ -87,7 +87,7 @@ impl App {
         }
 
         let screen = self.libs.screen.get_current();
-        let screen = self.screens.get_mut(&screen).unwrap();
+        let screen = self.screens.get_mut(&screen).unwrap_or_else(|| panic!("Unknown screen: {:?}", screen));
         screen.on_key_pressed(event)?;
 
         Some(())
@@ -95,7 +95,7 @@ impl App {
 
     fn on_tick(&mut self) {
         let screen = self.libs.screen.get_current();
-        let screen = self.screens.get_mut(&screen).unwrap();
+        let screen = self.screens.get_mut(&screen).unwrap_or_else(|| panic!("Unknown screen: {:?}", screen));
 
         if self.libs.screen.handle_screen_changed() {
             screen.on_screen_changed();
@@ -106,7 +106,7 @@ impl App {
 
     fn on_exit(&mut self) {
         let screen = self.libs.screen.get_current();
-        let screen = self.screens.get_mut(&screen).unwrap();
+        let screen = self.screens.get_mut(&screen).unwrap_or_else(|| panic!("Unknown screen: {:?}", screen));
         screen.on_exit();
 
         self.exit = true;

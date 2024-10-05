@@ -27,9 +27,17 @@ impl InMemory {
 
     pub fn set_uuid(&self, value: String) { self.write().uuid = Some(value); }
 
-    fn read(&self) -> RwLockReadGuard<InMemoryInner> { self.inner.read().unwrap() }
+    fn read(&self) -> RwLockReadGuard<InMemoryInner> {
+        self.inner
+            .read()
+            .unwrap_or_else(|err| panic!("Failed to lock InMemory (read): {}", err))
+    }
 
-    fn write(&self) -> RwLockWriteGuard<InMemoryInner> { self.inner.write().unwrap() }
+    fn write(&self) -> RwLockWriteGuard<InMemoryInner> {
+        self.inner
+            .write()
+            .unwrap_or_else(|err| panic!("Failed to lock InMemory (write): {}", err))
+    }
 
     pub fn auth_args_are_set(&self) -> bool {
         self.read().access_token.is_some() &&

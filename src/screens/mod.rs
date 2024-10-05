@@ -14,7 +14,7 @@ pub mod login;
 pub mod unpack;
 pub mod verify;
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub enum Screen {
     Login(ErrorMessage),
     Home,

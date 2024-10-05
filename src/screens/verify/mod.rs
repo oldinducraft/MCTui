@@ -43,15 +43,23 @@ impl VerifyScreen {
             .build()
             .unwrap();
 
-        let hash = reqwest::get(HASH_URL).await.unwrap().text().await.unwrap();
-        let hash = serde_json::from_str::<HashMap<String, String>>(&hash).unwrap();
+        let hash = reqwest::get(HASH_URL)
+            .await
+            .unwrap_or_else(|err| panic!("Failed to get hash: {}", err))
+            .text()
+            .await
+            .unwrap();
+        let hash = serde_json::from_str::<HashMap<String, String>>(&hash)
+            .unwrap_or_else(|err| panic!("Failed to parse hash: {}", err));
 
         for item in tree {
             if !item.path.absolute.is_file() {
                 continue;
             }
 
-            let right = hash.get(&item.path.relative.to_string()).unwrap();
+            let right = hash
+                .get(&item.path.relative.to_string())
+                .unwrap_or_else(|| panic!("Failed to get hash: {}", item.path.relative));
             if item.hash.to_hex_string() != *right {
                 libs.screen.goto(Screen::Download);
                 return;
