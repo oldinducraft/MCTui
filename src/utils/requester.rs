@@ -32,8 +32,7 @@ impl Requester {
             .await
             .unwrap();
 
-        serde_json::from_str::<HashMap<String, String>>(&hash)
-            .unwrap_or_else(|err| panic!("Failed to parse hash: {}", err))
+        serde_json::from_str(&hash).unwrap_or_else(|err| panic!("Failed to parse hash: {}", err))
     }
 
     pub async fn download_client<F, P>(&self, mut on_progress: F, path: P)

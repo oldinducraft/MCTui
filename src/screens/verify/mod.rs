@@ -50,10 +50,15 @@ impl VerifyScreen {
                 continue;
             }
 
+
+            let mut file = item.path.relative.to_string();
+            if cfg!(windows) {
+                file = file.replace('\\', "/");
+            }
+        
             let right = hash
-                .get(&item.path.relative.to_string())
-                // TODO: Fix paths on Windows
-                .unwrap_or_else(|| panic!("Failed to get hash: {}", item.path.relative));
+                .get(&file)
+                .unwrap_or_else(|| panic!("Failed to get hash: {}", file));
             if item.hash.to_hex_string() != *right {
                 libs.screen.goto(Screen::Download);
                 return;
