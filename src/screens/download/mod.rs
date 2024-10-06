@@ -3,6 +3,7 @@ use std::sync::Arc;
 use tokio::task::JoinHandle;
 
 use super::{CreatableScreenTrait, Screen, ScreenTrait};
+use crate::constants::CLIENT_ARCHIVE_FILENAME;
 use crate::utils::requester::Requester;
 use crate::utils::Libs;
 use crate::widgets::progress_state::ProgressState;
@@ -30,9 +31,16 @@ impl CreatableScreenTrait for DownloadScreen {
 
 impl DownloadScreen {
     pub async fn download(libs: Arc<Libs>, progress_state: Arc<ProgressState>) {
-        Requester::new().download_client(move |progress| {
-            progress_state.try_set(progress);
-        }).await;
+        let path = libs.config.data_dir.join(CLIENT_ARCHIVE_FILENAME);
+
+        Requester::new()
+            .download_client(
+                move |progress| {
+                    progress_state.try_set(progress);
+                },
+                path,
+            )
+            .await;
 
         libs.screen.goto(Screen::Unpack);
     }

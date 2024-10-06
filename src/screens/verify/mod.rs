@@ -1,4 +1,3 @@
-use std::fs::{self};
 use std::sync::Arc;
 
 use merkle_hash::{Algorithm, Encodable, MerkleTree};
@@ -33,12 +32,13 @@ impl CreatableScreenTrait for VerifyScreen {
 
 impl VerifyScreen {
     pub async fn verify(libs: Arc<Libs>) {
-        if fs::metadata(CLIENT_FOLDER_NAME).is_err() {
+        let folder_path = libs.config.data_dir.join(CLIENT_FOLDER_NAME);
+        if !folder_path.exists() {
             libs.screen.goto(Screen::Download);
             return;
         }
 
-        let tree = MerkleTree::builder(CLIENT_FOLDER_NAME)
+        let tree = MerkleTree::builder(folder_path.to_str().unwrap())
             .algorithm(Algorithm::Blake3)
             .build()
             .unwrap();

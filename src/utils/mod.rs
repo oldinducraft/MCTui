@@ -5,10 +5,10 @@ use screen_manager::ScreenManager;
 pub mod config;
 pub mod immediate_rw_lock;
 pub mod in_memory;
+pub mod requester;
 pub mod screen_manager;
 pub mod ui;
 pub mod yggdrasil;
-pub mod requester;
 
 pub struct Libs {
     pub screen:    ScreenManager,

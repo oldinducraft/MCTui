@@ -34,16 +34,18 @@ impl CreatableScreenTrait for UnpackScreen {
 
 impl UnpackScreen {
     pub async fn unpack(progress_state: Arc<ProgressState>, libs: Arc<Libs>) {
-        if fs::metadata(CLIENT_ARCHIVE_FILENAME).is_err() {
+        let archive_path = libs.config.data_dir.join(CLIENT_ARCHIVE_FILENAME);
+        if !archive_path.exists() {
             libs.screen.goto(Screen::Download);
             return;
         }
 
-        if fs::metadata(CLIENT_FOLDER_NAME).is_err() {
-            fs::create_dir(CLIENT_FOLDER_NAME).unwrap_or_else(|err| panic!("Failed to create output dir: {}", err));
+        let folder_path = libs.config.data_dir.join(CLIENT_FOLDER_NAME);
+        if !folder_path.exists() {
+            fs::create_dir(&folder_path).unwrap_or_else(|err| panic!("Failed to create output dir: {}", err));
         }
 
-        let tar_gz = File::open(CLIENT_ARCHIVE_FILENAME).unwrap_or_else(|err| panic!("Failed to open tar.gz: {}", err));
+        let tar_gz = File::open(archive_path).unwrap_or_else(|err| panic!("Failed to open tar.gz: {}", err));
         let total_size = tar_gz
             .metadata()
             .unwrap_or_else(|err| panic!("Failed to get tar.gz metadata: {}", err))
@@ -57,7 +59,7 @@ impl UnpackScreen {
             let mut entry = entry.unwrap();
             let file_size = entry.header().size().expect("Failed to get file size");
             entry
-                .unpack_in(CLIENT_FOLDER_NAME)
+                .unpack_in(&folder_path)
                 .unwrap_or_else(|err| panic!("Failed to unpack entry: {}", err));
 
             processed_size += file_size;
