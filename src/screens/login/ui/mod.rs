@@ -4,7 +4,7 @@ use ratatui::style::{Color, Style, Stylize};
 use ratatui::widgets::Paragraph;
 
 use super::LoginScreen;
-use crate::screens::RenderableScreenTrait;
+use crate::screens::RenderableScreen;
 use crate::utils::ui::center::center;
 use crate::widgets::window::Window;
 
@@ -13,7 +13,7 @@ pub mod form_state;
 
 const KEY_HINTS: [(&str, &str); 3] = [("Esc/Ctrl+C", "Exit"), ("Enter", "Submit"), ("Tab", "Next field")];
 
-impl RenderableScreenTrait for LoginScreen {
+impl RenderableScreen for LoginScreen {
     fn render(&mut self, frame: &mut ratatui::Frame) {
         let window = Window::new("Who tf are you".bold().red(), &KEY_HINTS);
 

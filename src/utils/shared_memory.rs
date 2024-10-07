@@ -1,13 +1,13 @@
 use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 
-pub struct InMemory {
-    inner: RwLock<InMemoryInner>,
+pub struct SharedMemory {
+    inner: RwLock<SharedMemoryInner>,
 }
 
-impl InMemory {
+impl SharedMemory {
     pub fn new() -> Self {
         Self {
-            inner: RwLock::new(InMemoryInner::default()),
+            inner: RwLock::new(SharedMemoryInner::default()),
         }
     }
 
@@ -31,16 +31,16 @@ impl InMemory {
 
     pub fn set_uuid(&self, value: String) { self.write().uuid = Some(value); }
 
-    fn read(&self) -> RwLockReadGuard<InMemoryInner> {
+    fn read(&self) -> RwLockReadGuard<SharedMemoryInner> {
         self.inner
             .read()
-            .unwrap_or_else(|err| panic!("Failed to lock InMemory (read): {}", err))
+            .unwrap_or_else(|err| panic!("Failed to lock SharedMemory (read): {}", err))
     }
 
-    fn write(&self) -> RwLockWriteGuard<InMemoryInner> {
+    fn write(&self) -> RwLockWriteGuard<SharedMemoryInner> {
         self.inner
             .write()
-            .unwrap_or_else(|err| panic!("Failed to lock InMemory (write): {}", err))
+            .unwrap_or_else(|err| panic!("Failed to lock SharedMemory (write): {}", err))
     }
 
     pub fn auth_args_are_set(&self) -> bool {
@@ -52,7 +52,7 @@ impl InMemory {
 }
 
 #[derive(Default)]
-struct InMemoryInner {
+struct SharedMemoryInner {
     access_token: Option<String>,
     client_token: Option<String>,
     username:     Option<String>,

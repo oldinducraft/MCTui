@@ -1,18 +1,15 @@
-use loader::Loader;
 use ratatui::layout::Constraint;
 use ratatui::Frame;
 
 use super::AuthenticateScreen;
-use crate::screens::RenderableScreenTrait;
+use crate::screens::RenderableScreen;
 use crate::utils::ui::center::center;
+use crate::widgets::loader::Loader;
 use crate::widgets::window::Window;
-
-pub mod loader;
-pub mod loader_state;
 
 const KEY_HINTS: [(&str, &str); 1] = [("Esc/Ctrl+C", "Exit")];
 
-impl RenderableScreenTrait for AuthenticateScreen {
+impl RenderableScreen for AuthenticateScreen {
     fn render(&mut self, frame: &mut Frame) {
         let window = Window::new("Authenticate".into(), &KEY_HINTS);
 
@@ -20,6 +17,12 @@ impl RenderableScreenTrait for AuthenticateScreen {
         let area = center(frame.area(), width_constraint, Constraint::Length(10));
 
         frame.render_widget(window, area);
-        frame.render_stateful_widget(Loader, area, &mut self.loader_state);
+        frame.render_stateful_widget(
+            Loader {
+                text: "Trying to log in...".to_string(),
+            },
+            area,
+            &mut self.loader_state,
+        );
     }
 }

@@ -1,7 +1,7 @@
 use super::AuthenticateScreen;
-use crate::screens::{Screen, ScreenEventsTrait};
+use crate::screens::{Screen, ScreenEvents};
 
-impl ScreenEventsTrait for AuthenticateScreen {
+impl ScreenEvents for AuthenticateScreen {
     fn on_tick(&mut self) { self.loader_state.on_tick(); }
 
     fn on_screen_changed(&mut self) {

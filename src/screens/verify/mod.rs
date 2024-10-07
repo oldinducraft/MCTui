@@ -3,7 +3,7 @@ use std::sync::Arc;
 use merkle_hash::{Algorithm, Encodable, MerkleTree};
 use tokio::task::JoinHandle;
 
-use super::{CreatableScreenTrait, Screen, ScreenTrait};
+use super::{Screen, ScreenTrait};
 use crate::constants::CLIENT_FOLDER_NAME;
 use crate::utils::requester::Requester;
 use crate::utils::Libs;
@@ -20,8 +20,8 @@ pub struct VerifyScreen {
 
 impl ScreenTrait for VerifyScreen {}
 
-impl CreatableScreenTrait for VerifyScreen {
-    fn new(libs: Arc<Libs>) -> VerifyScreen {
+impl VerifyScreen {
+    pub fn new(libs: Arc<Libs>) -> VerifyScreen {
         VerifyScreen {
             progress_state: Arc::new(ProgressState::default()),
             handle: None,
@@ -50,12 +50,11 @@ impl VerifyScreen {
                 continue;
             }
 
-
             let mut file = item.path.relative.to_string();
             if cfg!(windows) {
                 file = file.replace('\\', "/");
             }
-        
+
             let right = hash
                 .get(&file)
                 .unwrap_or_else(|| panic!("Failed to get hash: {}", file));

@@ -6,7 +6,7 @@ use flate2::read::GzDecoder;
 use tar::Archive;
 use tokio::task::JoinHandle;
 
-use super::{CreatableScreenTrait, Screen, ScreenTrait};
+use super::{Screen, ScreenTrait};
 use crate::constants::{CLIENT_ARCHIVE_FILENAME, CLIENT_FOLDER_NAME};
 use crate::utils::Libs;
 use crate::widgets::progress_state::ProgressState;
@@ -22,8 +22,8 @@ pub struct UnpackScreen {
 
 impl ScreenTrait for UnpackScreen {}
 
-impl CreatableScreenTrait for UnpackScreen {
-    fn new(libs: Arc<Libs>) -> UnpackScreen {
+impl UnpackScreen {
+    pub fn new(libs: Arc<Libs>) -> UnpackScreen {
         UnpackScreen {
             progress_state: Arc::new(ProgressState::default()),
             handle: None,

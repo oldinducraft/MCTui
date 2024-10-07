@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use super::{CreatableScreenTrait, Screen, ScreenTrait};
+use super::{Screen, ScreenTrait};
 use crate::utils::Libs;
 
 pub mod event;
@@ -12,8 +12,8 @@ pub struct HomeScreen {
 
 impl ScreenTrait for HomeScreen {}
 
-impl CreatableScreenTrait for HomeScreen {
-    fn new(libs: Arc<Libs>) -> HomeScreen { HomeScreen { libs } }
+impl HomeScreen {
+    pub fn new(libs: Arc<Libs>) -> HomeScreen { HomeScreen { libs } }
 }
 
 impl HomeScreen {

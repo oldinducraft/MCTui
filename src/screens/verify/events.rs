@@ -1,9 +1,9 @@
 use super::VerifyScreen;
-use crate::screens::{Screen, ScreenEventsTrait};
+use crate::screens::{Screen, ScreenEvents};
 
-impl ScreenEventsTrait for VerifyScreen {
+impl ScreenEvents for VerifyScreen {
     fn on_screen_changed(&mut self) {
-        if !self.libs.in_memory.auth_args_are_set() {
+        if !self.libs.shared_memory.auth_args_are_set() {
             self.libs.screen.goto(Screen::Authenticate);
             return;
         }

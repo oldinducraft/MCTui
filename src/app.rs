@@ -14,7 +14,7 @@ use crate::screens::home::HomeScreen;
 use crate::screens::login::LoginScreen;
 use crate::screens::unpack::UnpackScreen;
 use crate::screens::verify::VerifyScreen;
-use crate::screens::{CreatableScreenTrait, Screen, ScreenTrait};
+use crate::screens::{Screen, ScreenTrait};
 use crate::utils::Libs;
 
 pub struct App {
@@ -71,22 +71,22 @@ impl App {
         Ok(())
     }
 
-    fn handle_event(&mut self, event: Event) -> Option<()> {
+    fn handle_event(&mut self, event: Event) {
         match event {
             Event::Key(event) if event.kind == KeyEventKind::Press => self.on_key_pressed(event),
-            _ => Some(()),
-        }
+            _ => {},
+        };
     }
 
-    fn on_key_pressed(&mut self, event: KeyEvent) -> Option<()> {
+    fn on_key_pressed(&mut self, event: KeyEvent) {
         if event.code == KeyCode::Esc {
             self.on_exit();
-            return None;
+            return;
         }
 
         if event.modifiers == KeyModifiers::CONTROL && event.code == KeyCode::Char('c') {
             self.on_exit();
-            return None;
+            return;
         }
 
         let screen = self.libs.screen.get_current();
@@ -94,9 +94,7 @@ impl App {
             .screens
             .get_mut(&screen)
             .unwrap_or_else(|| panic!("Unknown screen: {:?}", screen));
-        screen.on_key_pressed(event)?;
-
-        Some(())
+        screen.on_key_pressed(event);
     }
 
     fn on_tick(&mut self) {

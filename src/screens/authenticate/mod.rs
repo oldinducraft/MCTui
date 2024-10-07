@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
 use tokio::task::JoinHandle;
-use ui::loader_state::LoaderState;
 
-use super::{CreatableScreenTrait, Screen, ScreenTrait};
+use super::{Screen, ScreenTrait};
 use crate::utils::yggdrasil::types::{AuthenticateRequest, YggdrasilResponse};
 use crate::utils::yggdrasil::Yggdrasil;
 use crate::utils::Libs;
+use crate::widgets::loader_state::LoaderState;
 
 mod events;
 mod ui;
@@ -19,8 +19,8 @@ pub struct AuthenticateScreen {
 
 impl ScreenTrait for AuthenticateScreen {}
 
-impl CreatableScreenTrait for AuthenticateScreen {
-    fn new(libs: Arc<Libs>) -> AuthenticateScreen {
+impl AuthenticateScreen {
+    pub fn new(libs: Arc<Libs>) -> AuthenticateScreen {
         AuthenticateScreen {
             loader_state: LoaderState::default(),
             libs,
@@ -56,8 +56,8 @@ impl AuthenticateScreen {
 
         match res {
             YggdrasilResponse::Success(tokens) => {
-                libs.in_memory.set_access_token(tokens.access_token);
-                libs.in_memory.set_client_token(tokens.client_token);
+                libs.shared_memory.set_access_token(tokens.access_token);
+                libs.shared_memory.set_client_token(tokens.client_token);
 
                 Some(YggdrasilResponse::Success(()))
             },
@@ -73,8 +73,8 @@ impl AuthenticateScreen {
 
         match res {
             YggdrasilResponse::Success(profile) => {
-                libs.in_memory.set_username(profile.username);
-                libs.in_memory.set_uuid(profile.uuid);
+                libs.shared_memory.set_username(profile.username);
+                libs.shared_memory.set_uuid(profile.uuid);
 
                 Some(YggdrasilResponse::Success(()))
             },

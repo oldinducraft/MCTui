@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use ui::form_state::LoginFormState;
 
-use super::{CreatableScreenTrait, Screen, ScreenTrait};
+use super::{Screen, ScreenTrait};
 use crate::utils::Libs;
 
 pub mod events;
@@ -17,8 +17,8 @@ pub struct LoginScreen {
 
 impl ScreenTrait for LoginScreen {}
 
-impl CreatableScreenTrait for LoginScreen {
-    fn new(libs: Arc<Libs>) -> LoginScreen {
+impl LoginScreen {
+    pub fn new(libs: Arc<Libs>) -> LoginScreen {
         LoginScreen {
             form: LoginFormState::default(),
             libs,

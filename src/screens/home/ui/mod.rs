@@ -3,12 +3,12 @@ use ratatui::layout::{Constraint, Flex, Layout};
 use title::Title;
 
 use super::HomeScreen;
-use crate::screens::RenderableScreenTrait;
+use crate::screens::RenderableScreen;
 
 pub mod menu;
 pub mod title;
 
-impl RenderableScreenTrait for HomeScreen {
+impl RenderableScreen for HomeScreen {
     fn render(&mut self, frame: &mut ratatui::Frame) {
         let layout = Layout::default()
             .constraints([Constraint::Fill(1), Constraint::Fill(1)])

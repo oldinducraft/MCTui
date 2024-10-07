@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use tokio::task::JoinHandle;
 
-use super::{CreatableScreenTrait, Screen, ScreenTrait};
+use super::{Screen, ScreenTrait};
 use crate::constants::CLIENT_ARCHIVE_FILENAME;
 use crate::utils::requester::Requester;
 use crate::utils::Libs;
@@ -19,8 +19,8 @@ pub struct DownloadScreen {
 
 impl ScreenTrait for DownloadScreen {}
 
-impl CreatableScreenTrait for DownloadScreen {
-    fn new(libs: Arc<Libs>) -> DownloadScreen {
+impl DownloadScreen {
+    pub fn new(libs: Arc<Libs>) -> DownloadScreen {
         DownloadScreen {
             libs,
             progress_state: Arc::new(ProgressState::default()),
