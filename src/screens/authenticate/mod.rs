@@ -33,14 +33,14 @@ impl AuthenticateScreen {
     fn spawn_auth(libs: Arc<Libs>) -> JoinHandle<()> {
         tokio::spawn(async move {
             let auth = AuthenticateScreen::authenticate(libs.clone()).await;
-            if let Some(YggdrasilResponse::Error(err)) = auth {
-                libs.screen.goto(Screen::Login(Some(err.error_message)));
+            if let Err(err) = auth {
+                libs.screen.goto(Screen::Login(Some(err)));
                 return;
             }
 
             let profile = AuthenticateScreen::get_profile(libs.clone()).await;
-            if let Some(YggdrasilResponse::Error(err)) = profile {
-                libs.screen.goto(Screen::Login(Some(err.error_message)));
+            if let Err(err) = profile {
+                libs.screen.goto(Screen::Login(Some(err)));
                 return;
             }
 
@@ -48,37 +48,38 @@ impl AuthenticateScreen {
         })
     }
 
-    async fn authenticate(libs: Arc<Libs>) -> Option<YggdrasilResponse> {
-        let auth = AuthenticateScreen::get_authenticate_request(libs.clone())?;
+    async fn authenticate(libs: Arc<Libs>) -> Result<(), String> {
+        let auth = AuthenticateScreen::get_authenticate_request(libs.clone())
+            .ok_or("Called .authenticate() without username or password")?;
 
         let client = Yggdrasil::new();
-        let res = client.authenticate(auth).await.ok()?;
+        let res = client.authenticate(auth).await.map_err(|err| err.to_string())?;
 
         match res {
             YggdrasilResponse::Success(tokens) => {
                 libs.shared_memory.set_access_token(tokens.access_token);
                 libs.shared_memory.set_client_token(tokens.client_token);
 
-                Some(YggdrasilResponse::Success(()))
+                Ok(())
             },
-            YggdrasilResponse::Error(err) => Some(YggdrasilResponse::Error(err)),
+            YggdrasilResponse::Error(err) => Err(err.error_message),
         }
     }
 
-    async fn get_profile(libs: Arc<Libs>) -> Option<YggdrasilResponse> {
-        let username = libs.config.get_username()?;
+    async fn get_profile(libs: Arc<Libs>) -> Result<(), String> {
+        let username = libs.config.get_username().ok_or("Called .get_profile() without username")?;
 
         let client = Yggdrasil::new();
-        let res = client.get_profile(&username).await.ok()?;
+        let res = client.get_profile(&username).await.map_err(|err| err.to_string())?;
 
         match res {
             YggdrasilResponse::Success(profile) => {
                 libs.shared_memory.set_username(profile.username);
                 libs.shared_memory.set_uuid(profile.uuid);
 
-                Some(YggdrasilResponse::Success(()))
+                Ok(())
             },
-            YggdrasilResponse::Error(err) => Some(YggdrasilResponse::Error(err)),
+            YggdrasilResponse::Error(err) => Err(err.error_message),
         }
     }
 

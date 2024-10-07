@@ -7,13 +7,13 @@ use super::{Screen, ScreenTrait};
 use crate::constants::CLIENT_FOLDER_NAME;
 use crate::utils::requester::Requester;
 use crate::utils::Libs;
-use crate::widgets::progress_state::ProgressState;
+use crate::widgets::loader_state::LoaderState;
 
 mod events;
 mod ui;
 
 pub struct VerifyScreen {
-    progress_state: Arc<ProgressState>,
+    loader_state: LoaderState,
     handle:         Option<JoinHandle<()>>,
     libs:           Arc<Libs>,
 }
@@ -23,7 +23,7 @@ impl ScreenTrait for VerifyScreen {}
 impl VerifyScreen {
     pub fn new(libs: Arc<Libs>) -> VerifyScreen {
         VerifyScreen {
-            progress_state: Arc::new(ProgressState::default()),
+            loader_state: LoaderState::default(),
             handle: None,
             libs,
         }

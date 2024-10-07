@@ -18,4 +18,6 @@ impl ScreenEvents for VerifyScreen {
             handle.abort();
         }
     }
+
+    fn on_tick(&mut self) { self.loader_state.on_tick(); }
 }

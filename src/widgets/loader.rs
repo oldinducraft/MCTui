@@ -26,7 +26,7 @@ impl StatefulWidget for Loader {
 impl Loader {
     fn get_throbber(&self) -> Throbber<'_> {
         Throbber::default()
-            .label("Trying to log in...")
+            .label(&self.text)
             .style(Style::default().add_modifier(Modifier::BOLD))
             .throbber_style(Style::default().fg(Color::LightYellow).add_modifier(Modifier::BOLD))
             .throbber_set(throbber_widgets_tui::BOX_DRAWING)
