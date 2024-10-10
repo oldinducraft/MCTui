@@ -8,6 +8,7 @@ pub mod home;
 pub mod login;
 pub mod unpack;
 pub mod verify;
+pub mod run;
 
 mod traits;
 pub use traits::{RenderableScreen, ScreenTrait, ScreenEvents};
@@ -21,6 +22,7 @@ pub enum Screen {
     Download,
     Unpack,
     Verify,
+    Run
 }
 
 impl Hash for Screen {

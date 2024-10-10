@@ -63,5 +63,7 @@ impl VerifyScreen {
                 return;
             }
         }
+
+        libs.screen.goto(Screen::Run);
     }
 }

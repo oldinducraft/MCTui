@@ -12,6 +12,7 @@ use crate::screens::authenticate::AuthenticateScreen;
 use crate::screens::download::DownloadScreen;
 use crate::screens::home::HomeScreen;
 use crate::screens::login::LoginScreen;
+use crate::screens::run::RunScreen;
 use crate::screens::unpack::UnpackScreen;
 use crate::screens::verify::VerifyScreen;
 use crate::screens::{Screen, ScreenTrait};
@@ -38,6 +39,7 @@ impl App {
         screens.insert(Screen::Unpack, Box::new(UnpackScreen::new(libs.clone())));
         screens.insert(Screen::Unpack, Box::new(UnpackScreen::new(libs.clone())));
         screens.insert(Screen::Verify, Box::new(VerifyScreen::new(libs.clone())));
+        screens.insert(Screen::Run, Box::new(RunScreen::new(libs.clone())));
 
         Self {
             exit: false,
