@@ -9,6 +9,7 @@ pub mod screen_manager;
 pub mod shared_memory;
 pub mod ui;
 pub mod yggdrasil;
+pub mod minecraft;
 
 pub struct Libs {
     pub screen:        ScreenManager,

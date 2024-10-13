@@ -8,8 +8,9 @@ impl ScreenEvents for RunScreen {
             return;
         }
 
+        let libs = self.libs.clone();
         let lines = self.lines.clone();
-        self.handle = Some(tokio::spawn(RunScreen::run(lines)));
+        self.handle = Some(tokio::spawn(RunScreen::run(libs, lines)));
     }
 
     fn on_exit(&mut self) {

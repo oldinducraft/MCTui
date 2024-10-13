@@ -6,7 +6,7 @@ use reqwest::{Client, RequestBuilder};
 use serde::Serialize;
 use types::{AuthenticateRequest, AuthenticateResponse, ProfileResponse, RequestResult, YggdrasilResponse};
 
-use crate::constants::YGGDRASIL_URL;
+use crate::constants::YGGDRASIL_DOMAIN;
 
 pub struct Yggdrasil {
     client: Client,
@@ -41,8 +41,10 @@ impl Yggdrasil {
     }
 
     fn post<T: Serialize>(&self, path: &str, body: T) -> RequestBuilder {
-        self.client.post(format!("{}/{}", YGGDRASIL_URL, path)).json(&body)
+        self.client
+            .post(format!("https://{}/{}", YGGDRASIL_DOMAIN, path))
+            .json(&body)
     }
 
-    fn get(&self, path: &str) -> RequestBuilder { self.client.get(format!("{}/{}", YGGDRASIL_URL, path)) }
+    fn get(&self, path: &str) -> RequestBuilder { self.client.get(format!("https://{}/{}", YGGDRASIL_DOMAIN, path)) }
 }

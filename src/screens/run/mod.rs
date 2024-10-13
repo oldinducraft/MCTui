@@ -1,11 +1,13 @@
-use std::process::Stdio;
+use std::process::{self, Stdio};
 use std::sync::{Arc, RwLock};
 
 use tokio::io::{AsyncBufReadExt, BufReader};
-use tokio::process::Command;
+use tokio::select;
 use tokio::task::JoinHandle;
 
 use super::ScreenTrait;
+use crate::constants::CLIENT_FOLDER_NAME;
+use crate::utils::minecraft::Minecraft;
 use crate::utils::Libs;
 use crate::widgets::loader_state::LoaderState;
 
@@ -31,10 +33,9 @@ impl RunScreen {
         }
     }
 
-    pub async fn run(lines: Arc<RwLock<Vec<String>>>) {
-        let mut child = Command::new("sh")
-            .arg("-c")
-            .arg("sleep 2 && echo hello world")
+    pub async fn run(libs: Arc<Libs>, lines: Arc<RwLock<Vec<String>>>) {
+        let client_path = libs.config.data_dir.join(CLIENT_FOLDER_NAME);
+        let mut child = Minecraft::java_cmd(&client_path, libs.shared_memory.get_access_token().unwrap())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .spawn()
@@ -46,14 +47,18 @@ impl RunScreen {
         let mut stdout_reader = BufReader::new(stdout).lines();
         let mut stderr_reader = BufReader::new(stderr).lines();
 
-        loop {
-            if let Some(line) = stdout_reader.next_line().await.unwrap() {
-                lines.write().expect("Failed to get lines lock").push(line);
-            }
-
-            if let Some(line) = stderr_reader.next_line().await.unwrap() {
-                lines.write().expect("Failed to get lines lock").push(line);
+        while let Ok(None) = child.try_wait() {
+            select! {
+                Ok(Some(line)) = stdout_reader.next_line() => {
+                    lines.write().expect("Failed to get lines lock").push(line);
+                },
+                Ok(Some(line)) = stderr_reader.next_line() => {
+                    lines.write().expect("Failed to get lines lock").push(line);
+                },
+                _ = child.wait() => {}
             }
         }
+
+        process::exit(0);
     }
 }

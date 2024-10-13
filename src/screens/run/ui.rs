@@ -22,10 +22,8 @@ impl RenderableScreen for RunScreen {
         let binding = self.lines.read().expect("Failed to read lines");
         let lines = binding
             .iter()
-            .rev()
-            .take(10)
-            .rev()
             .map(|line| Line::from(line.as_str()))
+            .rev()
             .collect::<Vec<_>>();
 
         frame.render_widget(

@@ -14,8 +14,8 @@ mod ui;
 
 pub struct VerifyScreen {
     loader_state: LoaderState,
-    handle:         Option<JoinHandle<()>>,
-    libs:           Arc<Libs>,
+    handle:       Option<JoinHandle<()>>,
+    libs:         Arc<Libs>,
 }
 
 impl ScreenTrait for VerifyScreen {}
@@ -49,15 +49,15 @@ impl VerifyScreen {
             if !item.path.absolute.is_file() {
                 continue;
             }
-
+            
             let mut file = item.path.relative.to_string();
             if cfg!(windows) {
                 file = file.replace('\\', "/");
             }
 
-            let right = hash
-                .get(&file)
-                .unwrap_or_else(|| panic!("Failed to get hash: {}", file));
+            let Some(right) = hash.get(&file) else {
+                continue;
+            };
             if item.hash.to_hex_string() != *right {
                 libs.screen.goto(Screen::Download);
                 return;
