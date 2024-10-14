@@ -7,7 +7,7 @@ pub const CLIENT_ARCHIVE_FILENAME: &str = "client.tar.gz";
 pub const CLIENT_FOLDER_NAME: &str = "client";
 
 pub const QUALIFIER: &str = "com";
-pub const ORGANIZATION: &str = "oldindcraft";
+pub const ORGANIZATION: &str = "oldinducraft";
 pub const APPLICATION: &str = "oic_launcher";
 
 pub const GAME_VERSION: &str = "1.21.1";

@@ -40,7 +40,7 @@ impl Minecraft {
             format!("-Djna.tmpdir={natives_directory}"),
             format!("-Dorg.lwjgl.system.SharedLibraryExtractPath={natives_directory}"),
             format!("-Dio.netty.native.workdir={natives_directory}"),
-            "-Dminecraft.launcher.brand=Oldindcraft".to_string(),
+            "-Dminecraft.launcher.brand=Oldinducraft".to_string(),
             format!("-Dminecraft.launcher.version={GAME_VERSION}"),
             format!(
                 "-javaagent:{}={YGGDRASIL_DOMAIN}",
