@@ -11,21 +11,13 @@ impl SharedMemory {
         }
     }
 
-    #[allow(dead_code)]
     pub fn get_access_token(&self) -> Option<String> { self.read().access_token.clone() }
 
-    #[allow(dead_code)]
-    pub fn get_client_token(&self) -> Option<String> { self.read().client_token.clone() }
-
-    #[allow(dead_code)]
     pub fn get_username(&self) -> Option<String> { self.read().username.clone() }
 
-    #[allow(dead_code)]
     pub fn get_uuid(&self) -> Option<String> { self.read().uuid.clone() }
 
     pub fn set_access_token(&self, value: String) { self.write().access_token = Some(value); }
-
-    pub fn set_client_token(&self, value: String) { self.write().client_token = Some(value); }
 
     pub fn set_username(&self, value: String) { self.write().username = Some(value); }
 
@@ -44,17 +36,13 @@ impl SharedMemory {
     }
 
     pub fn auth_args_are_set(&self) -> bool {
-        self.read().access_token.is_some() &&
-            self.read().client_token.is_some() &&
-            self.read().username.is_some() &&
-            self.read().uuid.is_some()
+        self.read().access_token.is_some() && self.read().username.is_some() && self.read().uuid.is_some()
     }
 }
 
 #[derive(Default)]
 struct SharedMemoryInner {
     access_token: Option<String>,
-    client_token: Option<String>,
     username:     Option<String>,
     uuid:         Option<String>,
 }

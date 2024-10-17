@@ -14,9 +14,7 @@ impl ScreenTrait for HomeScreen {}
 
 impl HomeScreen {
     pub fn new(libs: Arc<Libs>) -> HomeScreen { HomeScreen { libs } }
-}
 
-impl HomeScreen {
     pub fn log_out(&self) {
         self.libs.config.set_username(None);
         self.libs.config.set_password(None);

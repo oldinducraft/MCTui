@@ -9,7 +9,7 @@ pub struct ScreenManager {
 impl Default for ScreenManager {
     fn default() -> Self {
         Self {
-            inner:          ImmediateRwLock::new(Screen::default()),
+            inner:          ImmediateRwLock::default(),
             screen_changed: ImmediateRwLock::new(true),
         }
     }

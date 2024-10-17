@@ -10,12 +10,9 @@ impl ScreenEvents for AuthenticateScreen {
             return;
         }
 
+        self.cancel();
         self.handle = Some(AuthenticateScreen::spawn_auth(self.libs.clone()));
     }
 
-    fn on_exit(&mut self) {
-        if let Some(handle) = self.handle.take() {
-            handle.abort();
-        }
-    }
+    fn on_exit(&mut self) { self.cancel(); }
 }

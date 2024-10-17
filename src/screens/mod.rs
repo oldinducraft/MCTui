@@ -6,12 +6,12 @@ pub mod authenticate;
 pub mod download;
 pub mod home;
 pub mod login;
+pub mod run;
 pub mod unpack;
 pub mod verify;
-pub mod run;
 
 mod traits;
-pub use traits::{RenderableScreen, ScreenTrait, ScreenEvents};
+pub use traits::{RenderableScreen, ScreenEvents, ScreenTrait};
 
 #[derive(Default, Clone, Debug)]
 pub enum Screen {
@@ -22,7 +22,7 @@ pub enum Screen {
     Download,
     Unpack,
     Verify,
-    Run
+    Run,
 }
 
 impl Hash for Screen {

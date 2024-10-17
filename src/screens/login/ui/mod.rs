@@ -30,13 +30,11 @@ impl RenderableScreen for LoginScreen {
         frame.render_widget(window, area);
         frame.render_stateful_widget(LoginForm, layout[0], &mut self.form);
 
-        if let Some(err) = &self.error {
-            frame.render_widget(
-                Paragraph::new(err.as_str())
-                    .style(Style::default().fg(Color::Red))
-                    .alignment(Alignment::Center),
-                layout[1],
-            );
-        }
+        frame.render_widget(
+            Paragraph::new(self.error.clone().unwrap_or_default())
+                .style(Style::default().fg(Color::Red))
+                .alignment(Alignment::Center),
+            layout[1],
+        );
     }
 }

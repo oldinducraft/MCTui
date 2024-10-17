@@ -8,10 +8,11 @@ use serde::{Deserialize, Serialize};
 use crate::constants::{APPLICATION, CONFIG_FILENAME, ORGANIZATION, QUALIFIER};
 
 pub struct Config {
-    inner:       RwLock<ConfigInner>,
-    config_path: PathBuf,
-    config_dir:  PathBuf,
+    inner: RwLock<ConfigInner>,
 
+    config_path: PathBuf,
+
+    config_dir:   PathBuf,
     pub data_dir: PathBuf,
 }
 

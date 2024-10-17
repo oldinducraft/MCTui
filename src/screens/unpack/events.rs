@@ -11,12 +11,9 @@ impl ScreenEvents for UnpackScreen {
         let progress_state = self.progress_state.clone();
         let libs = self.libs.clone();
 
+        self.cancel();
         self.handle = Some(tokio::spawn(UnpackScreen::unpack(progress_state, libs)));
     }
 
-    fn on_exit(&mut self) {
-        if let Some(handle) = self.handle.take() {
-            handle.abort();
-        }
-    }
+    fn on_exit(&mut self) { self.cancel(); }
 }

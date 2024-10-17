@@ -8,7 +8,7 @@ use ratatui::widgets::block::{Position, Title};
 
 pub type KeyHint = (&'static str, &'static str);
 
-pub fn key_hint_title(keys: &[KeyHint]) -> Title<'static> {
+pub fn key_hint(keys: &[KeyHint]) -> Title<'static> {
     #[allow(unstable_name_collisions)]
     let lines = keys
         .iter()

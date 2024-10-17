@@ -25,9 +25,7 @@ impl LoginScreen {
             error: None,
         }
     }
-}
 
-impl LoginScreen {
     fn submit(&self) {
         self.libs.config.set_username(Some(self.form.username.clone()));
         self.libs.config.set_password(Some(self.form.password.clone()));

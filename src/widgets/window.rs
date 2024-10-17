@@ -6,8 +6,7 @@ use ratatui::text::Span;
 use ratatui::widgets::block::Title;
 use ratatui::widgets::{Block, Borders, Widget};
 
-use crate::utils::ui::key_hint::{key_hint_title, KeyHint};
-use crate::utils::ui::title as title_utils;
+use crate::utils::ui::{key_hint as key_hint_utils, title as title_utils};
 
 pub struct Window {
     title:    Title<'static>,
@@ -15,10 +14,10 @@ pub struct Window {
 }
 
 impl Window {
-    pub fn new(title: Span<'static>, key_hint: &[KeyHint]) -> Self {
+    pub fn new(title: Span<'static>, key_hint: &[key_hint_utils::KeyHint]) -> Self {
         Self {
             title:    title_utils::title(title),
-            key_hint: key_hint_title(key_hint),
+            key_hint: key_hint_utils::key_hint(key_hint),
         }
     }
 

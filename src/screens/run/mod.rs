@@ -18,7 +18,7 @@ pub struct RunScreen {
     loader_state: LoaderState,
     handle:       Option<JoinHandle<()>>,
     libs:         Arc<Libs>,
-    lines: Arc<RwLock<Vec<String>>>,
+    lines:        Arc<RwLock<Vec<String>>>,
 }
 
 impl ScreenTrait for RunScreen {}
@@ -33,9 +33,20 @@ impl RunScreen {
         }
     }
 
+    fn cancel(&mut self) {
+        if let Some(handle) = self.handle.take() {
+            handle.abort();
+        }
+    }
+
     pub async fn run(libs: Arc<Libs>, lines: Arc<RwLock<Vec<String>>>) {
         let client_path = libs.config.data_dir.join(CLIENT_FOLDER_NAME);
-        let mut child = Minecraft::java_cmd(&client_path, libs.shared_memory.get_access_token().unwrap())
+
+        let access_token = libs.shared_memory.get_access_token().unwrap();
+        let username = libs.shared_memory.get_username().unwrap();
+        let uuid = libs.shared_memory.get_uuid().unwrap();
+
+        let mut child = Minecraft::java_cmd(&client_path, access_token, username, uuid)
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .spawn()

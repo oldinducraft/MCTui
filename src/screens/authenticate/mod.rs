@@ -27,9 +27,13 @@ impl AuthenticateScreen {
             handle: None,
         }
     }
-}
 
-impl AuthenticateScreen {
+    fn cancel(&mut self) {
+        if let Some(handle) = self.handle.take() {
+            handle.abort();
+        }
+    }
+
     fn spawn_auth(libs: Arc<Libs>) -> JoinHandle<()> {
         tokio::spawn(async move {
             let auth = AuthenticateScreen::authenticate(libs.clone()).await;
@@ -58,8 +62,6 @@ impl AuthenticateScreen {
         match res {
             YggdrasilResponse::Success(tokens) => {
                 libs.shared_memory.set_access_token(tokens.access_token);
-                libs.shared_memory.set_client_token(tokens.client_token);
-
                 Ok(())
             },
             YggdrasilResponse::Error(err) => Err(err.error_message),
@@ -67,7 +69,10 @@ impl AuthenticateScreen {
     }
 
     async fn get_profile(libs: Arc<Libs>) -> Result<(), String> {
-        let username = libs.config.get_username().ok_or("Called .get_profile() without username")?;
+        let username = libs
+            .config
+            .get_username()
+            .ok_or("Called .get_profile() without username")?;
 
         let client = Yggdrasil::new();
         let res = client.get_profile(&username).await.map_err(|err| err.to_string())?;

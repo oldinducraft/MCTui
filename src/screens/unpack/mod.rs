@@ -30,9 +30,13 @@ impl UnpackScreen {
             libs,
         }
     }
-}
 
-impl UnpackScreen {
+    fn cancel(&mut self) {
+        if let Some(handle) = self.handle.take() {
+            handle.abort();
+        }
+    }
+
     pub async fn unpack(progress_state: Arc<ProgressState>, libs: Arc<Libs>) {
         let archive_path = libs.config.data_dir.join(CLIENT_ARCHIVE_FILENAME);
         if !archive_path.exists() {

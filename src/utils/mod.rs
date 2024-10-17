@@ -4,12 +4,12 @@ use shared_memory::SharedMemory;
 
 pub mod config;
 pub mod immediate_rw_lock;
+pub mod minecraft;
 pub mod requester;
 pub mod screen_manager;
 pub mod shared_memory;
 pub mod ui;
 pub mod yggdrasil;
-pub mod minecraft;
 
 pub struct Libs {
     pub screen:        ScreenManager,

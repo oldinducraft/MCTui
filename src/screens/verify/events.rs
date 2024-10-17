@@ -10,14 +10,11 @@ impl ScreenEvents for VerifyScreen {
 
         let libs = self.libs.clone();
 
+        self.cancel();
         self.handle = Some(tokio::spawn(VerifyScreen::verify(libs)));
     }
 
-    fn on_exit(&mut self) {
-        if let Some(handle) = self.handle.take() {
-            handle.abort();
-        }
-    }
+    fn on_exit(&mut self) { self.cancel(); }
 
     fn on_tick(&mut self) { self.loader_state.on_tick(); }
 }

@@ -27,19 +27,18 @@ impl DownloadScreen {
             handle: None,
         }
     }
-}
 
-impl DownloadScreen {
+    fn cancel(&mut self) {
+        if let Some(handle) = self.handle.take() {
+            handle.abort();
+        }
+    }
+
     pub async fn download(libs: Arc<Libs>, progress_state: Arc<ProgressState>) {
         let path = libs.config.data_dir.join(CLIENT_ARCHIVE_FILENAME);
 
         Requester::new()
-            .download_client(
-                move |progress| {
-                    progress_state.try_set(progress);
-                },
-                path,
-            )
+            .download_client(move |progress| progress_state.try_set(progress), path)
             .await;
 
         libs.screen.goto(Screen::Unpack);

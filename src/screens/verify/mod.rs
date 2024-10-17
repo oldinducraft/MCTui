@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use merkle_hash::{Algorithm, Encodable, MerkleTree};
 use tokio::task::JoinHandle;
 
 use super::{Screen, ScreenTrait};
@@ -28,9 +27,13 @@ impl VerifyScreen {
             libs,
         }
     }
-}
 
-impl VerifyScreen {
+    fn cancel(&mut self) {
+        if let Some(handle) = self.handle.take() {
+            handle.abort();
+        }
+    }
+
     pub async fn verify(libs: Arc<Libs>) {
         let folder_path = libs.config.data_dir.join(CLIENT_FOLDER_NAME);
         if !folder_path.exists() {
@@ -38,32 +41,32 @@ impl VerifyScreen {
             return;
         }
 
-        let tree = MerkleTree::builder(folder_path.to_str().unwrap())
-            .algorithm(Algorithm::Blake3)
-            .build()
-            .unwrap();
+        let hash_map = Requester::new().get_client_hash().await;
 
-        let hash = Requester::new().get_client_hash().await;
-
-        for item in tree {
-            if !item.path.absolute.is_file() {
-                continue;
-            }
-            
-            let mut file = item.path.relative.to_string();
-            if cfg!(windows) {
-                file = file.replace('\\', "/");
+        for (file_name, expected_hash) in hash_map {
+            let file_path = folder_path.join(VerifyScreen::convert_path(file_name));
+            if !file_path.exists() {
+                libs.screen.goto(Screen::Download);
+                return;
             }
 
-            let Some(right) = hash.get(&file) else {
-                continue;
-            };
-            if item.hash.to_hex_string() != *right {
+            let bytes = std::fs::read(file_path).unwrap();
+            let actual_hash = sha256::digest(&bytes);
+
+            if actual_hash != expected_hash {
                 libs.screen.goto(Screen::Download);
                 return;
             }
         }
 
         libs.screen.goto(Screen::Run);
+    }
+
+    fn convert_path(path: String) -> String {
+        if cfg!(windows) {
+            return path.replace('\\', "/");
+        }
+
+        path
     }
 }
