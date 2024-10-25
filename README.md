@@ -4,6 +4,8 @@ A TUI-based Minecraft launcher that downloads the Minecraft client and Authlib-i
 
 ## Configuration  
 
+__⚠️Outdated, will be updated soon⚠️__
+
 The following variables can be modified in the `src/constants.rs` file:  
 
 | Variable | Description |
