@@ -1,16 +1,19 @@
 use std::path::{Path, PathBuf};
 
-use download::{Download, Library, Local, Resource};
+use download::Download;
 use jvm_arg::JvmArg;
 use serde::{Deserialize, Serialize};
 use tokio::fs::create_dir_all;
 use tokio::task::JoinError;
 
+use crate::asset::Asset;
+use crate::hosts::Hosts;
 use crate::traits::concurrent_download::ConcurrentDownload;
 use crate::traits::download::Download as DownloadTrait;
 use crate::traits::into_invalid::IntoInvalid;
-use crate::traits::path::Path as _;
-use crate::traits::retain_usable::IntoUsable;
+use crate::traits::path::ResolvePath;
+use crate::traits::retain_usable::RetainUsable;
+use crate::traits::verify::Sha1VerifyError;
 
 pub mod download;
 pub mod jvm_arg;
@@ -27,11 +30,11 @@ pub struct Manifest {
     pub main_class:    String,
     pub jvm:           Vec<JvmArg>,
     #[serde(rename = "assetIndexes")]
-    pub asset_indexes: Download<Local>,
-    pub assets:        Download<Local>,
-    pub client:        Download<Local>,
-    pub authlib:       Download<Local>,
-    pub libraries:     Vec<Download<Library>>,
+    pub asset_indexes: Download,
+    pub assets:        Download,
+    pub client:        Download,
+    pub authlib:       Download,
+    pub libraries:     Vec<Download>,
 
     #[serde(skip)]
     pub root:               PathBuf,
@@ -45,14 +48,19 @@ pub struct Manifest {
     pub asset_indexes_root: PathBuf,
     #[serde(skip)]
     pub assets_root:        PathBuf,
+
+    #[serde(skip)]
+    pub hosts: Hosts,
 }
 
 impl Manifest {
-    pub async fn new<T>(raw: &str, root: T) -> Result<Self, serde_json::Error>
+    pub async fn new<T>(raw: &str, root: T, hosts: Hosts) -> Result<Self, serde_json::Error>
     where
         T: AsRef<Path>,
     {
         let mut manifest: Manifest = serde_json::from_str(raw)?;
+
+        manifest.hosts = hosts;
 
         manifest.jvm.retain_usable();
         manifest.libraries.retain_usable();
@@ -80,32 +88,36 @@ impl Manifest {
         dunce::canonicalize(path)
     }
 
-    pub async fn download<T>(&self, on_progress: &T) -> Result<(), DownloadError>
+    pub async fn download_if_needed<T>(&self, on_progress: &T) -> Result<(), DownloadError>
     where
         T: Fn(usize, usize) + Send + 'static + Sync,
     {
         let invalid_libraries = self.libraries.clone().into_invalid(16, &self.libraries_root).await?;
 
-        self.authlib.download_if_needed(&self.root, 5, on_progress).await?;
-        self.assets.download_if_needed(&self.root, 5, on_progress).await?;
+        self.authlib
+            .download_if_needed(&self.hosts.misc, &self.root, 5, on_progress)
+            .await?;
+        self.assets
+            .download_if_needed(&self.hosts.misc, &self.root, 5, on_progress)
+            .await?;
         self.client
-            .download_if_needed(&self.versions_root, 5, on_progress)
+            .download_if_needed(&self.hosts.misc, &self.versions_root, 5, on_progress)
             .await?;
         self.asset_indexes
-            .download_if_needed(&self.asset_indexes_root, 5, on_progress)
+            .download_if_needed(&self.hosts.misc, &self.asset_indexes_root, 5, on_progress)
             .await?;
 
         invalid_libraries
-            .download_concurrently(8, &self.libraries_root, 5, on_progress)
+            .download_concurrently_if_needed(8, &self.hosts.libraries, &self.libraries_root, 5, on_progress)
             .await?;
 
         let assets_path = self.assets.resolve(&self.root).await?;
         let assets_str = tokio::fs::read_to_string(assets_path).await?;
-        let asset_downloads: Vec<Download<Resource>> = serde_json::from_str(&assets_str)?;
+        let asset_downloads: Vec<Asset> = serde_json::from_str(&assets_str)?;
         let invalid_asset_downloads = asset_downloads.into_invalid(16, &self.assets_root).await?;
 
         invalid_asset_downloads
-            .download_concurrently(8, &self.assets_root, 5, on_progress)
+            .download_concurrently_if_needed(8, &self.hosts.resources, &self.assets_root, 5, on_progress)
             .await?;
 
         Ok(())
@@ -115,9 +127,8 @@ impl Manifest {
 #[derive(Debug)]
 pub enum DownloadError {
     FailedInOneOfThreads(JoinError),
-    DownloadError(crate::traits::download::Error),
+    DownloadError(crate::traits::download::DownloadError<std::io::Error, Sha1VerifyError<std::io::Error>>),
     AssetsParsedFailed(serde_json::Error),
-    PathResolveError(crate::traits::path::Error),
     Io(std::io::Error),
 }
 
@@ -125,16 +136,14 @@ impl From<JoinError> for DownloadError {
     fn from(err: JoinError) -> Self { DownloadError::FailedInOneOfThreads(err) }
 }
 
-impl From<crate::traits::download::Error> for DownloadError {
-    fn from(err: crate::traits::download::Error) -> Self { DownloadError::DownloadError(err) }
+impl From<crate::traits::download::DownloadError<std::io::Error, Sha1VerifyError<std::io::Error>>> for DownloadError {
+    fn from(err: crate::traits::download::DownloadError<std::io::Error, Sha1VerifyError<std::io::Error>>) -> Self {
+        DownloadError::DownloadError(err)
+    }
 }
 
 impl From<serde_json::Error> for DownloadError {
     fn from(err: serde_json::Error) -> Self { DownloadError::AssetsParsedFailed(err) }
-}
-
-impl From<crate::traits::path::Error> for DownloadError {
-    fn from(err: crate::traits::path::Error) -> Self { DownloadError::PathResolveError(err) }
 }
 
 impl From<std::io::Error> for DownloadError {

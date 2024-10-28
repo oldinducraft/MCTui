@@ -7,21 +7,30 @@ use futures::StreamExt;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
 
+use super::path::ResolvePath;
 use super::should_use::ShouldUse;
 use super::url::Url;
-use super::verify::Verify;
-use crate::manifest::download::VerifyError;
+use super::verify::Sha1Verify;
 
 pub trait Download {
-    type Error: std::fmt::Debug;
+    type Error;
 
-    fn download<F, P>(&self, root: P, on_progress: &F) -> impl Future<Output = Result<(), Self::Error>> + Send
+    /// Download an item, returning an error if the download fails
+    fn download<F, P>(
+        &self,
+        host: &str,
+        root: P,
+        on_progress: &F,
+    ) -> impl Future<Output = Result<(), Self::Error>> + Send
     where
         F: Fn(usize, usize) + Send + 'static + Sync,
         P: AsRef<Path> + Send + Sync;
 
+    /// Download an item, only if it needs to be downloaded. Retry up to
+    /// `retries` times.
     fn download_if_needed<F, P>(
         &self,
+        host: &str,
         root: P,
         retries: u32,
         on_progress: &F,
@@ -31,22 +40,19 @@ pub trait Download {
         P: AsRef<Path> + Send + Sync;
 }
 
-impl<T: super::path::Path + Url + ShouldUse + Sync + Verify> Download for T
-where
-    crate::traits::download::Error: From<<T as Verify>::Error>,
-{
-    type Error = Error;
+impl<T: ResolvePath + Url + ShouldUse + Sync + Sha1Verify> Download for T {
+    type Error = DownloadError<<T as ResolvePath>::Error, <T as Sha1Verify>::Error>;
 
-    async fn download<F, P>(&self, root: P, on_progress: &F) -> Result<(), Self::Error>
+    async fn download<F, P>(&self, host: &str, root: P, on_progress: &F) -> Result<(), Self::Error>
     where
         F: Fn(usize, usize) + Send + 'static + Sync,
         P: AsRef<Path> + Send + Sync,
     {
-        let url = self.url();
-        let dst = self.resolve(&root).await?;
+        let url = self.url(host);
+        let dst = self.resolve(&root).await.map_err(DownloadError::ResolveFailed)?;
 
         let res = reqwest::get(url).await?;
-        let total_size = res.content_length().ok_or(Error::MissingContentLength)? as usize;
+        let total_size = res.content_length().ok_or(DownloadError::MissingContentLength)? as usize;
 
         let mut file = File::create(&dst).await?;
 
@@ -64,7 +70,17 @@ where
         Ok(())
     }
 
-    async fn download_if_needed<F, P>(&self, root: P, mut retries: u32, on_progress: &F) -> Result<(), Self::Error>
+    /// Download an item, returning an error if the download fails. Will retry
+    /// up to `retries` times. Will not download if the file is already valid
+    /// ([`Sha1Verify::verify`]). Won't download if the item should not be used
+    /// ([`ShouldUse::should_use`]).
+    async fn download_if_needed<F, P>(
+        &self,
+        host: &str,
+        root: P,
+        mut retries: u32,
+        on_progress: &F,
+    ) -> Result<(), Self::Error>
     where
         F: Fn(usize, usize) + Send + 'static + Sync,
         P: AsRef<Path> + Send + Sync,
@@ -74,14 +90,14 @@ where
         }
 
         loop {
-            match self.download(&root, on_progress).await {
+            match self.download(host, &root, on_progress).await {
                 Ok(()) => {
-                    if self.verify(&root).await? {
+                    if self.verify(&root).await.map_err(DownloadError::VerifyFailed)? {
                         break Ok(());
                     }
 
                     if retries == 0 {
-                        break Err(Error::HashMismatch);
+                        break Err(DownloadError::HashMismatch);
                     }
                 },
                 Err(err) if retries == 0 => break Err(err),
@@ -94,28 +110,23 @@ where
 }
 
 #[derive(Debug)]
-pub enum Error {
+pub enum DownloadError<R, V> {
     Reqwest(reqwest::Error),
     Io(std::io::Error),
+    /// The content length header is missing
     MissingContentLength,
-    MissingParentForDst,
-    CantResolveDst(super::path::Error),
-    VerifyFailed(VerifyError),
+    /// Failed to resolve the destination path of an item
+    ResolveFailed(R),
+    /// Failed to verify an item
+    VerifyFailed(V),
+    /// The hash of an item does not match the hash in the manifest
     HashMismatch,
 }
 
-impl From<reqwest::Error> for Error {
-    fn from(err: reqwest::Error) -> Self { Error::Reqwest(err) }
+impl<R, V> From<reqwest::Error> for DownloadError<R, V> {
+    fn from(err: reqwest::Error) -> Self { DownloadError::Reqwest(err) }
 }
 
-impl From<std::io::Error> for Error {
-    fn from(err: std::io::Error) -> Self { Error::Io(err) }
-}
-
-impl From<super::path::Error> for Error {
-    fn from(err: super::path::Error) -> Self { Error::CantResolveDst(err) }
-}
-
-impl From<VerifyError> for Error {
-    fn from(err: VerifyError) -> Self { Error::VerifyFailed(err) }
+impl<R, V> From<std::io::Error> for DownloadError<R, V> {
+    fn from(err: std::io::Error) -> Self { DownloadError::Io(err) }
 }

@@ -2,11 +2,10 @@ pub mod types;
 
 use std::time::Duration;
 
+use constants::YGGDRASIL_DOMAIN;
 use reqwest::{Client, RequestBuilder};
 use serde::Serialize;
 use types::{AuthenticateRequest, AuthenticateResponse, ProfileResponse, RequestResult, YggdrasilResponse};
-
-use constants::YGGDRASIL_DOMAIN;
 
 pub struct Yggdrasil {
     client: Client,

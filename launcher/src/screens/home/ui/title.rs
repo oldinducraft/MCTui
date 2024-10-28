@@ -1,7 +1,6 @@
+use constants::ORGANIZATION;
 use ratatui::prelude::*;
 use tui_widgets::big_text::{BigText, PixelSize};
-
-use constants::ORGANIZATION;
 
 pub struct Title;
 

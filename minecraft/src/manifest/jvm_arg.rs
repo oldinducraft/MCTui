@@ -1,8 +1,7 @@
 use serde::{Deserialize, Serialize};
 
-use crate::traits::should_use::ShouldUse;
-
 use super::platform::Platform;
+use crate::traits::should_use::ShouldUse;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(untagged)]
