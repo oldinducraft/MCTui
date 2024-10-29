@@ -1,6 +1,4 @@
 {
-  "cmake.configureOnOpen": false,
-  "cSpell.language": "en,en-GB,lorem,uk,en-US,ru,ru-RU",
   "[rust]": {
     "editor.defaultFormatter": "rust-lang.rust-analyzer",
     "editor.formatOnSave": true
