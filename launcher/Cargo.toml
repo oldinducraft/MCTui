@@ -1,0 +1,25 @@
+[package]
+name = "mctui"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+color-eyre = "0.6.3"
+crossterm = { version = "0.28.1", features = ["event-stream"] }
+directories = "5.0.1"
+flate2 = "1.0.34"
+futures = "0.3.30"
+itertools = "0.13.0"
+num-traits = "0.2.19"
+ratatui = { version = "0.28.1" }
+reqwest = { version = "0.12.7", features = ["json", "stream"] }
+serde = { version = "1.0.210", features = ["derive"] }
+serde_json = "1.0.128"
+sha256 = "1.5.0"
+tar = "0.4.42"
+throbber-widgets-tui = "0.7.0"
+tokio = { version = "1.40.0", features = ["full"] }
+tui-widgets = { version = "0.3.0", default-features = false, features = ["big-text"] }
+walkdir = "2.5.0"
+constants = { path = "../constants" }
+minecraft = { path = "../minecraft" }

@@ -1,7 +1,6 @@
 /target
-**/*.rs.bk
-.#*
-#*
-/data
-/logs
-.idea
+config.json
+*.tar.gz
+client
+hash.json
+downloads
